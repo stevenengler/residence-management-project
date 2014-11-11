@@ -21,7 +21,6 @@ public class ResidenceManagementSystemGUI{
 	}
 	//
 	public void startGUI(){
-		//GUI will go here
-		//new StartupGUI(residenceDataGateway, userDataGateway, dbConnection).setVisible(true);
+		new StartupGUI(residenceDataGateway, userDataGateway, dbConnection).setVisible(true);
 	}
 }
