@@ -13,4 +13,8 @@ public class DummyUserData implements IUserDataGateway{
 	public String getUserLastName(UserID userID){
 		return "Engler";
 	}
+	@Override
+	public int getUserPermissions(UserID userID) throws Exception{
+		return 1;
+	}
 }

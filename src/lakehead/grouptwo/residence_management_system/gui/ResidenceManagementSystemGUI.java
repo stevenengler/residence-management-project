@@ -1,23 +1,27 @@
 package lakehead.grouptwo.residence_management_system.gui;
 //
-import lakehead.grouptwo.residence_management_system.data.IAccountData;
+import java.sql.Connection;
+
 import lakehead.grouptwo.residence_management_system.data.gateways.IResidenceDataGateway;
 import lakehead.grouptwo.residence_management_system.data.gateways.IUserDataGateway;
 //
 public class ResidenceManagementSystemGUI{
-	public IResidenceDataGateway residenceDataGateway;
-	public IUserDataGateway userDataGateway;
-	public IAccountData accountData;
+	private IResidenceDataGateway residenceDataGateway;
+	private IUserDataGateway userDataGateway;
+	//private IAccountData accountData;
+	private Connection dbConnection;
 	//
-	public ResidenceManagementSystemGUI(IResidenceDataGateway _residenceDataGateway, IUserDataGateway _userDataGateway, IAccountData _accountData){
+	public ResidenceManagementSystemGUI(IResidenceDataGateway _residenceDataGateway, IUserDataGateway _userDataGateway, Connection _dbConnection){
 		residenceDataGateway = _residenceDataGateway;
 		userDataGateway = _userDataGateway;
-		accountData = _accountData;
+		//accountData = _accountData;
+		dbConnection = _dbConnection;
 		//
 		startGUI();
 	}
 	//
 	public void startGUI(){
-		
+		//GUI will go here
+		//new StartupGUI(residenceDataGateway, userDataGateway, dbConnection).setVisible(true);
 	}
 }
