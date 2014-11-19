@@ -4,23 +4,24 @@ import java.sql.Connection;
 
 import lakehead.grouptwo.residence_management_system.data.gateways.IResidenceDataGateway;
 import lakehead.grouptwo.residence_management_system.data.gateways.IUserDataGateway;
+import lakehead.grouptwo.residence_management_system.implemented_gateways.server.ConnectionToServer;
 //
 public class ResidenceManagementSystemGUI{
 	private IResidenceDataGateway residenceDataGateway;
 	private IUserDataGateway userDataGateway;
 	//private IAccountData accountData;
-	private Connection dbConnection;
+	private ConnectionToServer connectionToServer;
 	//
-	public ResidenceManagementSystemGUI(IResidenceDataGateway _residenceDataGateway, IUserDataGateway _userDataGateway, Connection _dbConnection){
+	public ResidenceManagementSystemGUI(IResidenceDataGateway _residenceDataGateway, IUserDataGateway _userDataGateway, ConnectionToServer _connectionToServer){
 		residenceDataGateway = _residenceDataGateway;
 		userDataGateway = _userDataGateway;
 		//accountData = _accountData;
-		dbConnection = _dbConnection;
+		connectionToServer = _connectionToServer;
 		//
 		startGUI();
 	}
 	//
 	public void startGUI(){
-		new StartupGUI(residenceDataGateway, userDataGateway, dbConnection).setVisible(true);
+		new StartupGUI(residenceDataGateway, userDataGateway, connectionToServer).setVisible(true);
 	}
 }

@@ -23,6 +23,10 @@ import lakehead.grouptwo.residence_management_system.data.IAccountData;
 import lakehead.grouptwo.residence_management_system.data.gateways.IResidenceDataGateway;
 import lakehead.grouptwo.residence_management_system.data.gateways.IUserDataGateway;
 import lakehead.grouptwo.residence_management_system.implemented_gateways.client_sql.ClientSQLAccountData;
+import lakehead.grouptwo.residence_management_system.implemented_gateways.server.ConnectionToServer;
+import lakehead.grouptwo.residence_management_system.implemented_gateways.server.ServerAccountData;
+import lakehead.grouptwo.residence_management_system.implemented_gateways.server.ServerResidenceData;
+import lakehead.grouptwo.residence_management_system.implemented_gateways.server.ServerUserData;
 
 public class ApplyForResidenceGUI extends JFrame{
 	private static final long serialVersionUID = 4553205297481048092L;
@@ -33,13 +37,13 @@ public class ApplyForResidenceGUI extends JFrame{
 	private IResidenceDataGateway residenceDataGateway;
 	private IUserDataGateway userDataGateway;
 	//private IAccountData accountData;
-	private Connection dbConnection;
+	private ConnectionToServer connectionToServer;
 	//
-	public ApplyForResidenceGUI(IResidenceDataGateway _residenceDataGateway, IUserDataGateway _userDataGateway, Connection _dbConnection){
+	public ApplyForResidenceGUI(IResidenceDataGateway _residenceDataGateway, IUserDataGateway _userDataGateway, ConnectionToServer _connectionToServer){
 		residenceDataGateway = _residenceDataGateway;
 		userDataGateway = _userDataGateway;
 		//accountData = _accountData;
-		dbConnection = _dbConnection;
+		connectionToServer = _connectionToServer;
 		//
 		setTitle("Application for Housing");
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -237,14 +241,15 @@ public class ApplyForResidenceGUI extends JFrame{
 			
 			public void actionPerformed(ActionEvent action){
 				
-				ClientSQLAccountData accountData = null;
+				ServerAccountData accountData = null;
 				try{
-					accountData = new ClientSQLAccountData(dbConnection, usernameText.getText(), passwordText.getPassword());
+					accountData = new ServerAccountData(connectionToServer, usernameText.getText(), passwordText.getPassword());
 				}catch(AuthenticationException ae){
 					JOptionPane.showMessageDialog(null, ae.getMessage());
 				}
 				//
 				if(accountData != null){
+					
 					int year = 0;
 					
 					for (Enumeration<AbstractButton> buttons = radioGroupYear.getElements(); buttons.hasMoreElements();) {
@@ -258,12 +263,16 @@ public class ApplyForResidenceGUI extends JFrame{
 					if(year != 0){
 					
 						try{
+							((ServerResidenceData)residenceDataGateway).setAccountData(accountData);
+							((ServerUserData)userDataGateway).setAccountData(accountData);
 							// need to add measures to prevent the user from registering twice or if they already have a room
 							residenceDataGateway.applyForResidence(accountData.getThisUserID(), year, requestArea.getText());
 							setVisible(false);
-							new StartupGUI(residenceDataGateway, userDataGateway, dbConnection).setVisible(true);
+							new StartupGUI(residenceDataGateway, userDataGateway, connectionToServer).setVisible(true);
 						}catch(Exception e){
 							e.printStackTrace();
+						}finally{
+							((ServerResidenceData)residenceDataGateway).setAccountData(null);
 						}
 					
 					}else{

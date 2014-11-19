@@ -19,6 +19,10 @@ import lakehead.grouptwo.residence_management_system.data.User;
 import lakehead.grouptwo.residence_management_system.data.gateways.IResidenceDataGateway;
 import lakehead.grouptwo.residence_management_system.data.gateways.IUserDataGateway;
 import lakehead.grouptwo.residence_management_system.implemented_gateways.client_sql.ClientSQLAccountData;
+import lakehead.grouptwo.residence_management_system.implemented_gateways.server.ConnectionToServer;
+import lakehead.grouptwo.residence_management_system.implemented_gateways.server.ServerAccountData;
+import lakehead.grouptwo.residence_management_system.implemented_gateways.server.ServerResidenceData;
+import lakehead.grouptwo.residence_management_system.implemented_gateways.server.ServerUserData;
 
 class LoginGUI extends JFrame{
 	private static final long serialVersionUID = 1L;
@@ -26,13 +30,13 @@ class LoginGUI extends JFrame{
 	private IResidenceDataGateway residenceDataGateway;
 	private IUserDataGateway userDataGateway;
 	//private IAccountData accountData;
-	private Connection dbConnection;
+	private ConnectionToServer connectionToServer;
 	//
-	public LoginGUI(IResidenceDataGateway _residenceDataGateway, IUserDataGateway _userDataGateway, Connection _dbConnection){
+	public LoginGUI(IResidenceDataGateway _residenceDataGateway, IUserDataGateway _userDataGateway, ConnectionToServer _connectionToServer){
 		residenceDataGateway = _residenceDataGateway;
 		userDataGateway = _userDataGateway;
 		//accountData = _accountData;
-		dbConnection = _dbConnection;
+		connectionToServer = _connectionToServer;
 		
 		setTitle("Login ");
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -74,14 +78,16 @@ class LoginGUI extends JFrame{
 				//password = new String(passwordText.getPassword());
 				//System.out.println(name + ' ' + password); // working check
 				//
-				ClientSQLAccountData accountData = null;
+				ServerAccountData accountData = null;
 				try{
-					accountData = new ClientSQLAccountData(dbConnection, userText.getText(), passwordText.getPassword());
+					accountData = new ServerAccountData(connectionToServer, userText.getText(), passwordText.getPassword());
 				}catch(AuthenticationException ae){
 					JOptionPane.showMessageDialog(null, ae.getMessage());
 				}
 				//
 				if(accountData != null){
+					((ServerResidenceData)residenceDataGateway).setAccountData(accountData);
+					((ServerUserData)userDataGateway).setAccountData(accountData);
 					try{
 						if(new User(accountData.getThisUserID(), residenceDataGateway, userDataGateway).getPermissions() == 1){
 							ResidentGUI Res = new ResidentGUI(residenceDataGateway, userDataGateway, accountData);
@@ -93,7 +99,8 @@ class LoginGUI extends JFrame{
 							setVisible(false);
 						}
 					}catch(Exception e1){
-						JOptionPane.showMessageDialog(null, "There was an error getting account data.");
+						e1.printStackTrace();
+						JOptionPane.showMessageDialog(null, "Logged in, but there was an error getting account data.");
 					}
 				}
 				//

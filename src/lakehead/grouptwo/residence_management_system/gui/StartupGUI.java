@@ -14,6 +14,7 @@ import javax.swing.border.EmptyBorder;
 import lakehead.grouptwo.residence_management_system.data.IAccountData;
 import lakehead.grouptwo.residence_management_system.data.gateways.IResidenceDataGateway;
 import lakehead.grouptwo.residence_management_system.data.gateways.IUserDataGateway;
+import lakehead.grouptwo.residence_management_system.implemented_gateways.server.ConnectionToServer;
 
 class StartupGUI extends JFrame{
 	private static final long serialVersionUID = -8448733317069922553L;
@@ -23,13 +24,13 @@ class StartupGUI extends JFrame{
 	private IResidenceDataGateway residenceDataGateway;
 	private IUserDataGateway userDataGateway;
 	//private IAccountData accountData;
-	private Connection dbConnection;
+	private ConnectionToServer connectionToServer;
 	//
-	public StartupGUI(IResidenceDataGateway _residenceDataGateway, IUserDataGateway _userDataGateway, Connection _dbConnection){
+	public StartupGUI(IResidenceDataGateway _residenceDataGateway, IUserDataGateway _userDataGateway, ConnectionToServer _connectionToServer){
 		residenceDataGateway = _residenceDataGateway;
 		userDataGateway = _userDataGateway;
 		//accountData = _accountData;
-		dbConnection = _dbConnection;
+		connectionToServer = _connectionToServer;
 		//
 		setTitle("LU Housing");
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -51,7 +52,7 @@ class StartupGUI extends JFrame{
 		
 		loginButton.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent e){
-				LoginGUI LOG = new LoginGUI(residenceDataGateway, userDataGateway, dbConnection);
+				LoginGUI LOG = new LoginGUI(residenceDataGateway, userDataGateway, connectionToServer);
 				LOG.setVisible(true);
 				setVisible(false);
 			}
@@ -63,7 +64,7 @@ class StartupGUI extends JFrame{
 		
 		applyButton.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent e){
-				ApplyForResidenceGUI APP = new ApplyForResidenceGUI(residenceDataGateway, userDataGateway, dbConnection);
+				ApplyForResidenceGUI APP = new ApplyForResidenceGUI(residenceDataGateway, userDataGateway, connectionToServer);
 				APP.setVisible(true);
 				setVisible(false);
 			}
