@@ -42,16 +42,47 @@ public class ResidenceManagementServerProtocol{
 	//
 	public void processFromClient(ServerMessage message, ConnectionToClient connection){
 		ServerMessage.MessageID messageID = message.getID();
+		//
+		boolean messageObjectWasCorrectType = true;
+		//
 		if(messageID == ServerMessage.MessageID.REQUESTING_DATA){
-			handleDataRequest((ServerRequestMessage)message.getObject(), connection, message.getUserID(), message.getAuthKey());
+			// client is requesting data from the server
+			if(message.getObject() instanceof ServerRequestMessage){
+				handleDataRequest((ServerRequestMessage)message.getObject(), connection, message.getUserID(), message.getAuthKey());
+			}else{
+				messageObjectWasCorrectType = false;
+			}
 		}else if(messageID == ServerMessage.MessageID.SENDING_DATA){
-			handleSentData((ServerSendMessage)message.getObject(), connection, message.getUserID(), message.getAuthKey());
+			// client is sending data to the server
+			if(message.getObject() instanceof ServerSendMessage){
+				handleSentData((ServerSendMessage)message.getObject(), connection, message.getUserID(), message.getAuthKey());
+			}else{
+				messageObjectWasCorrectType = false;
+			}
 		}else if(messageID == ServerMessage.MessageID.EXECUTE_COMMAND){
-			handleCommand((ServerCommandMessage)message.getObject(), connection, message.getUserID(), message.getAuthKey());
+			// client wants to execute a command on the data
+			if(message.getObject() instanceof ServerCommandMessage){
+				handleCommand((ServerCommandMessage)message.getObject(), connection, message.getUserID(), message.getAuthKey());
+			}else{
+				messageObjectWasCorrectType = false;
+			}
 		}else if(messageID == ServerMessage.MessageID.LOGIN_REQUEST){
-			handleLoginRequest((ServerLoginRequestMessage)message.getObject(), connection);
+			//client wants to login and get the key
+			if(message.getObject() instanceof ServerLoginRequestMessage){
+				handleLoginRequest((ServerLoginRequestMessage)message.getObject(), connection);
+			}else{
+				messageObjectWasCorrectType = false;
+			}
 		}else if(messageID == ServerMessage.MessageID.CLOSE_CONNECTION){
 			connection.close();
+		}
+		
+		if(!messageObjectWasCorrectType){
+			try{
+				connection.sendMessage(new ServerMessage(ServerMessage.MessageID.UNEXPECTED_MESSAGE_DATA_TYPE, null, null, null));
+			}catch(IOException e1){
+				// nothing can be done here, the connection's probably closed
+			}
 		}
 	}
 	//
@@ -71,134 +102,129 @@ public class ResidenceManagementServerProtocol{
 		try{
 			if(messageID == MessageDataID.USER_FIRSTNAME){
 				if(getClientPermissions(userID, authKey) > 0){
-					messageToSend = new ServerSendMessage(MessageDataID.USER_FIRSTNAME, userDataGateway.getUserFirstName((UserID)message.getObject()));
+					messageToSend = new ServerSendMessage(messageID, userDataGateway.getUserFirstName((UserID)message.getObject()));
 				}else{
 					sendPermissionErrorMessage = true;
 				}
 			}else if(messageID == MessageDataID.USER_LASTNAME){
 				if(getClientPermissions(userID, authKey) > 0){
-					messageToSend = new ServerSendMessage(MessageDataID.USER_LASTNAME, userDataGateway.getUserLastName((UserID)message.getObject()));
+					messageToSend = new ServerSendMessage(messageID, userDataGateway.getUserLastName((UserID)message.getObject()));
 				}else{
 					sendPermissionErrorMessage = true;
 				}
 			}else if(messageID == MessageDataID.USER_LOGGED_IN){
 				if(getClientPermissions(userID, authKey) > 0){
 					// logged in
-					messageToSend = new ServerSendMessage(MessageDataID.USER_LOGGED_IN, true);
+					messageToSend = new ServerSendMessage(messageID, true);
 				}else{
-					messageToSend = new ServerSendMessage(MessageDataID.USER_LOGGED_IN, false);
+					// not logged in or error with authentication
+					messageToSend = new ServerSendMessage(messageID, false);
 				}
 			}else if(messageID == MessageDataID.USER_PERMISSIONS){
 				if(getClientPermissions(userID, authKey) > 0){
-					messageToSend = new ServerSendMessage(MessageDataID.USER_PERMISSIONS, userDataGateway.getUserPermissions((UserID)message.getObject()));
+					messageToSend = new ServerSendMessage(messageID, userDataGateway.getUserPermissions((UserID)message.getObject()));
 				}else{
 					sendPermissionErrorMessage = true;
 				}
 			}else if(messageID == MessageDataID.AVAILABLE_ROOMS_IN_BUILDING){
 				if(getClientPermissions(userID, authKey) > 0){
-					messageToSend = new ServerSendMessage(MessageDataID.AVAILABLE_ROOMS_IN_BUILDING, residenceDataGateway.getAllAvailableRoomsInBuilding((BuildingID)message.getObject()));
+					messageToSend = new ServerSendMessage(messageID, residenceDataGateway.getAllAvailableRoomsInBuilding((BuildingID)message.getObject()));
 				}else{
 					sendPermissionErrorMessage = true;
 				}
 			}else if(messageID == MessageDataID.NUM_OF_AVAILABLE_ROOMS_IN_BUILDING){
-				//if(getClientPermissions(userID, authKey) > 0){
-					messageToSend = new ServerSendMessage(MessageDataID.NUM_OF_AVAILABLE_ROOMS_IN_BUILDING, residenceDataGateway.getNumberOfAvailableRoomsInBuilding((BuildingID)message.getObject()));
-				//}else{
-				//	sendPermissionErrorMessage = true;
-				//}
+				// no permission checking necessary since anyone can view this
+				messageToSend = new ServerSendMessage(messageID, residenceDataGateway.getNumberOfAvailableRoomsInBuilding((BuildingID)message.getObject()));
 			}else if(messageID == MessageDataID.OCCUPANTS_OF_ROOM){
 				if(getClientPermissions(userID, authKey) > 0){
-					messageToSend = new ServerSendMessage(MessageDataID.OCCUPANTS_OF_ROOM, residenceDataGateway.getOccupantsOfRoom((RoomID)message.getObject()));
+					messageToSend = new ServerSendMessage(messageID, residenceDataGateway.getOccupantsOfRoom((RoomID)message.getObject()));
 				}else{
 					sendPermissionErrorMessage = true;
 				}
 			}else if(messageID == MessageDataID.USERS_RECEIVED_MESSAGES){
 				if(getClientPermissions(userID, authKey) > 0){
-					messageToSend = new ServerSendMessage(MessageDataID.USERS_RECEIVED_MESSAGES, residenceDataGateway.getUsersReceivedMessages((UserID)message.getObject()));
+					messageToSend = new ServerSendMessage(messageID, residenceDataGateway.getUsersReceivedMessages((UserID)message.getObject()));
 				}else{
 					sendPermissionErrorMessage = true;
 				}
 			}else if(messageID == MessageDataID.USERS_UNREAD_RECEIVED_MESSAGES){
 				if(getClientPermissions(userID, authKey) > 0){
-					messageToSend = new ServerSendMessage(MessageDataID.USERS_UNREAD_RECEIVED_MESSAGES, residenceDataGateway.getUsersUnreadReceivedMessages((UserID)message.getObject()));
+					messageToSend = new ServerSendMessage(messageID, residenceDataGateway.getUsersUnreadReceivedMessages((UserID)message.getObject()));
 				}else{
 					sendPermissionErrorMessage = true;
 				}
 			}else if(messageID == MessageDataID.CONTENTS_OF_MESSAGE){
 				if(getClientPermissions(userID, authKey) > 0){
-					messageToSend = new ServerSendMessage(MessageDataID.CONTENTS_OF_MESSAGE, residenceDataGateway.getContentsOfMessage((MessageID)message.getObject()));
+					messageToSend = new ServerSendMessage(messageID, residenceDataGateway.getContentsOfMessage((MessageID)message.getObject()));
 				}else{
 					sendPermissionErrorMessage = true;
 				}
 			}else if(messageID == MessageDataID.READ_STATUS_OF_MESSAGE){
 				if(getClientPermissions(userID, authKey) > 0){
-					messageToSend = new ServerSendMessage(MessageDataID.READ_STATUS_OF_MESSAGE, residenceDataGateway.getReadStatusOfMessage((MessageID)message.getObject()));
+					messageToSend = new ServerSendMessage(messageID, residenceDataGateway.getReadStatusOfMessage((MessageID)message.getObject()));
 				}else{
 					sendPermissionErrorMessage = true;
 				}
 			}else if(messageID == MessageDataID.ROOM_OCCUPIED_BY_USER){
 				if(getClientPermissions(userID, authKey) > 0){
-					messageToSend = new ServerSendMessage(MessageDataID.ROOM_OCCUPIED_BY_USER, residenceDataGateway.getRoomOccupiedByUser((UserID)message.getObject()));
+					messageToSend = new ServerSendMessage(messageID, residenceDataGateway.getRoomOccupiedByUser((UserID)message.getObject()));
 				}else{
 					sendPermissionErrorMessage = true;
 				}
 			}else if(messageID == MessageDataID.BUILDING_THAT_CONTAINS_ROOM){
 				if(getClientPermissions(userID, authKey) > 0){
-					messageToSend = new ServerSendMessage(MessageDataID.BUILDING_THAT_CONTAINS_ROOM, residenceDataGateway.getBuildingThatContainsRoom((RoomID)message.getObject()));
+					messageToSend = new ServerSendMessage(messageID, residenceDataGateway.getBuildingThatContainsRoom((RoomID)message.getObject()));
 				}else{
 					sendPermissionErrorMessage = true;
 				}
 			}else if(messageID == MessageDataID.MANAGER_OF_BUILDING){
 				if(getClientPermissions(userID, authKey) > 0){
-					messageToSend = new ServerSendMessage(MessageDataID.MANAGER_OF_BUILDING, residenceDataGateway.getManagerOfBuilding((BuildingID)message.getObject()));
+					messageToSend = new ServerSendMessage(messageID, residenceDataGateway.getManagerOfBuilding((BuildingID)message.getObject()));
 				}else{
 					sendPermissionErrorMessage = true;
 				}
 			}else if(messageID == MessageDataID.BUILDINGS_MANAGED_BY_USER){
 				if(getClientPermissions(userID, authKey) > 0){
-					messageToSend = new ServerSendMessage(MessageDataID.BUILDINGS_MANAGED_BY_USER, residenceDataGateway.getBuildingsManagedByUser((UserID)message.getObject()));
+					messageToSend = new ServerSendMessage(messageID, residenceDataGateway.getBuildingsManagedByUser((UserID)message.getObject()));
 				}else{
 					sendPermissionErrorMessage = true;
 				}
 			}else if(messageID == MessageDataID.ALL_ROOMS_IN_BUILDING){
 				if(getClientPermissions(userID, authKey) > 0){
-					messageToSend = new ServerSendMessage(MessageDataID.ALL_ROOMS_IN_BUILDING, residenceDataGateway.getAllRoomsInBuilding((BuildingID)message.getObject()));
+					messageToSend = new ServerSendMessage(messageID, residenceDataGateway.getAllRoomsInBuilding((BuildingID)message.getObject()));
 				}else{
 					sendPermissionErrorMessage = true;
 				}
 			}else if(messageID == MessageDataID.NUMBER_OF_ROOMS_IN_BUILDING){
-				//if(getClientPermissions(userID, authKey) > 0){
-					messageToSend = new ServerSendMessage(MessageDataID.NUMBER_OF_ROOMS_IN_BUILDING, residenceDataGateway.getNumberOfRoomsInBuilding((BuildingID)message.getObject()));
-				//}else{
-				//	sendPermissionErrorMessage = true;
-				//}
+				// no permission checking necessary since anyone can view this
+				messageToSend = new ServerSendMessage(messageID, residenceDataGateway.getNumberOfRoomsInBuilding((BuildingID)message.getObject()));
 			}else if(messageID == MessageDataID.RESIDENCE_APPLICATIONS){
 				if(getClientPermissions(userID, authKey) == 2){
-					messageToSend = new ServerSendMessage(MessageDataID.RESIDENCE_APPLICATIONS, residenceDataGateway.getResidenceApplications((int)message.getObject()));
+					messageToSend = new ServerSendMessage(messageID, residenceDataGateway.getResidenceApplications((int)message.getObject()));
 				}else{
 					sendPermissionErrorMessage = true;
 				}
 			}else if(messageID == MessageDataID.APPLICATION_USER){
 				if(getClientPermissions(userID, authKey) == 2){
-					messageToSend = new ServerSendMessage(MessageDataID.APPLICATION_USER, residenceDataGateway.getApplicationUser((ApplicationID)message.getObject()));
+					messageToSend = new ServerSendMessage(messageID, residenceDataGateway.getApplicationUser((ApplicationID)message.getObject()));
 				}else{
 					sendPermissionErrorMessage = true;
 				}
 			}else if(messageID == MessageDataID.APPLICATION_YEAR_LEVEL){
 				if(getClientPermissions(userID, authKey) == 2){
-					messageToSend = new ServerSendMessage(MessageDataID.APPLICATION_YEAR_LEVEL, residenceDataGateway.getApplicationYearLevel((ApplicationID)message.getObject()));
+					messageToSend = new ServerSendMessage(messageID, residenceDataGateway.getApplicationYearLevel((ApplicationID)message.getObject()));
 				}else{
 					sendPermissionErrorMessage = true;
 				}
 			}else if(messageID == MessageDataID.APPLICATION_SPECIAL_REQUESTS){
 				if(getClientPermissions(userID, authKey) == 2){
-					messageToSend = new ServerSendMessage(MessageDataID.APPLICATION_SPECIAL_REQUESTS, residenceDataGateway.getApplicationSpecialRequests((ApplicationID)message.getObject()));
+					messageToSend = new ServerSendMessage(messageID, residenceDataGateway.getApplicationSpecialRequests((ApplicationID)message.getObject()));
 				}else{
 					sendPermissionErrorMessage = true;
 				}
 			}else if(messageID == MessageDataID.NUMBER_OF_APPLICATIONS){
 				if(getClientPermissions(userID, authKey) == 2){
-					messageToSend = new ServerSendMessage(MessageDataID.NUMBER_OF_APPLICATIONS, residenceDataGateway.getNumberOfApplications());
+					messageToSend = new ServerSendMessage(messageID, residenceDataGateway.getNumberOfApplications());
 				}else{
 					sendPermissionErrorMessage = true;
 				}
@@ -225,6 +251,7 @@ public class ResidenceManagementServerProtocol{
 			}else if(messageToSend == null){
 				connection.sendMessage(new ServerMessage(ServerMessage.MessageID.ERROR, null, null, null));
 			}else{
+				// everything's good, sending the data
 				connection.sendMessage(new ServerMessage(ServerMessage.MessageID.SENDING_DATA, messageToSend, null, null));
 			}
 		}catch(IOException e){
@@ -253,10 +280,12 @@ public class ResidenceManagementServerProtocol{
 				Each argument expression appears to be fully evaluated before any part of any
 				argument expression to its right.
 		*/
+		//
 		ServerCommandMessage.CommandMessageID messageID = message.getID();
 		Vector<Object> messageObjects = message.getObjects();
 		//
 		boolean sendErrorMessage = false;
+		boolean sendWrongDataTypeErrorMessage = false;
 		boolean sendAuthenticationErrorMessage = false;
 		boolean sendPermissionErrorMessage = false;
 		//
@@ -298,6 +327,9 @@ public class ResidenceManagementServerProtocol{
 					sendPermissionErrorMessage = true;
 				}
 			}
+		}catch(ClassCastException e){
+			// there was a problem casting one of the received objects
+			sendWrongDataTypeErrorMessage = true;
 		}catch(Exception e){
 			sendErrorMessage = true;
 		}
@@ -313,6 +345,8 @@ public class ResidenceManagementServerProtocol{
 		try{
 			if(sendErrorMessage){
 				connection.sendMessage(new ServerMessage(ServerMessage.MessageID.ERROR, null, null, null));
+			}else if(sendWrongDataTypeErrorMessage){
+				connection.sendMessage(new ServerMessage(ServerMessage.MessageID.UNEXPECTED_MESSAGE_DATA_TYPE, null, null, null));
 			}else if(sendAuthenticationErrorMessage){
 				connection.sendMessage(new ServerMessage(ServerMessage.MessageID.AUTHENTICATION_ERROR, null, null, null));
 			}else if(sendPermissionErrorMessage){
@@ -336,6 +370,7 @@ public class ResidenceManagementServerProtocol{
 			}catch(IOException e1){
 				e1.printStackTrace();
 			}
+			e.printStackTrace();
 			return;
 		}
 		//
@@ -357,27 +392,26 @@ public class ResidenceManagementServerProtocol{
 					//throw new AuthenticationException("Username and password did not match.");
 					try{
 						connection.sendMessage(new ServerMessage(ServerMessage.MessageID.AUTHENTICATION_ERROR,null,null,null));
-					}catch(IOException e1){
-						e1.printStackTrace();
+					}catch(IOException e){
+						e.printStackTrace();
 					}
 					return;
 				}
 			}else{
-				//throw new AuthenticationException("Username and password did not match.");
 				try{
 					connection.sendMessage(new ServerMessage(ServerMessage.MessageID.AUTHENTICATION_ERROR,null,null,null));
-				}catch(IOException e1){
-					e1.printStackTrace();
+				}catch(IOException e){
+					e.printStackTrace();
 				}
 				return;
 			}
 		}catch(SQLException e){
-			//throw new AuthenticationException("Check yo SQL!");
 			try{
 				connection.sendMessage(new ServerMessage(ServerMessage.MessageID.ERROR,null,null,null));
 			}catch(IOException e1){
 				e1.printStackTrace();
 			}
+			e.printStackTrace();
 			return;
 		}
 	}
@@ -387,17 +421,20 @@ public class ResidenceManagementServerProtocol{
 		//   -1	: error with authentication
 		//   0	: not logged in (null userID supplied)
 		//   >0	: return from table
+		final int ERROR_CODE = -1;
+		final int NOT_LOGGED_IN_CODE = 0;
+		//
 		if(userID == null){
-			return 0;
+			return NOT_LOGGED_IN_CODE;
 		}
 		
 		try{
 			if(validateAuthenticationKey(userID, authKey) == false){
-				return -1;
+				return ERROR_CODE;
 			}
 		}catch(AuthenticationException e){
 			e.printStackTrace();
-			return -1;
+			return ERROR_CODE;
 		}
 		//
 		PreparedStatement st;
@@ -405,8 +442,8 @@ public class ResidenceManagementServerProtocol{
 			st = dbConnection.prepareStatement("SELECT permissions FROM user_accounts WHERE user_id = ? LIMIT 1");
 			st.setLong(1, userID.id);
 		}catch(SQLException e){
-			//throw new AuthenticationException("Something went really wrong :(");
-			return -1;
+			e.printStackTrace();
+			return ERROR_CODE;
 		}
 		//
 		ResultSet rs = null;
@@ -416,11 +453,11 @@ public class ResidenceManagementServerProtocol{
 			if(rs.next()){
 				return rs.getInt(1);
 			}else{
-				return -1;
+				return ERROR_CODE;
 			}
 		}catch(SQLException e){
-			//throw new AuthenticationException("Check yo SQL!");
-			return -1;
+			e.printStackTrace();
+			return ERROR_CODE;
 		}
 	}
 	//
@@ -430,7 +467,7 @@ public class ResidenceManagementServerProtocol{
 			st = dbConnection.prepareStatement("SELECT auth_key FROM user_accounts WHERE user_id = ? LIMIT 1");
 			st.setLong(1, userID.id);
 		}catch(SQLException e){
-			throw new AuthenticationException("Something went really wrong :(");
+			throw new AuthenticationException("There shouldn't be an error here.", e);
 		}
 		//
 		ResultSet rs = null;
@@ -447,7 +484,7 @@ public class ResidenceManagementServerProtocol{
 				return false;
 			}
 		}catch(SQLException e){
-			throw new AuthenticationException("Check yo SQL!");
+			throw new AuthenticationException("Check the Authentication SQL code.", e);
 		}
 	}
 }

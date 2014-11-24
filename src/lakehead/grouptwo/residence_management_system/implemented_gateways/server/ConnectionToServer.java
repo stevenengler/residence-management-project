@@ -5,8 +5,14 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.util.Vector;
 
+import lakehead.grouptwo.residence_management_server.messages.MessageDataID;
+import lakehead.grouptwo.residence_management_server.messages.ServerCommandMessage;
 import lakehead.grouptwo.residence_management_server.messages.ServerMessage;
+import lakehead.grouptwo.residence_management_server.messages.ServerRequestMessage;
+import lakehead.grouptwo.residence_management_server.messages.ServerSendMessage;
+import lakehead.grouptwo.residence_management_system.data.AuthenticationException;
 
 public class ConnectionToServer{
 	private ObjectInputStream inStream;
@@ -21,10 +27,11 @@ public class ConnectionToServer{
 	//
 	public void sendMessage(ServerMessage message) throws IOException{
 		outStream.writeObject(message);
+		outStream.flush();
 	}
 	public ServerMessage readMessage() throws IOException{
 		try{
-			return (ServerMessage)inStream.readObject();
+			return (ServerMessage) inStream.readObject();
 		}catch(ClassNotFoundException e){
 			System.out.println("Not using same message version.");
 			throw new IOException();

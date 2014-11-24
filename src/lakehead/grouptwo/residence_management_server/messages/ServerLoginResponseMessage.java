@@ -5,9 +5,7 @@ import java.io.Serializable;
 import lakehead.grouptwo.residence_management_system.data.identifiers.UserID;
 
 public class ServerLoginResponseMessage implements Serializable{
-	private static final long serialVersionUID = 4754047671052384974L;
-	//
-	//public enum RequestMessageID {USER_FIRSTNAME, USER_LASTNAME};
+	private static final long serialVersionUID = -4117309653926320125L;
 	//
 	private UserID userID;
 	private char[] authKey;

@@ -43,7 +43,10 @@ public class ServerAccountData implements IAccountData{
 		if(responseMessage.getID() == ServerMessage.MessageID.AUTHENTICATION_ERROR){
 			throw new AuthenticationException("The username and password combination is not in the system.");
 		}
-		
+		if(responseMessage.getID() == ServerMessage.MessageID.UNEXPECTED_MESSAGE_DATA_TYPE){
+			throw new AuthenticationException("The server did not understand the request.");
+		}
+		//
 		id = ((ServerLoginResponseMessage)responseMessage.getObject()).getUserID();
 		authKey = ((ServerLoginResponseMessage)responseMessage.getObject()).getAuthKey();
 	}

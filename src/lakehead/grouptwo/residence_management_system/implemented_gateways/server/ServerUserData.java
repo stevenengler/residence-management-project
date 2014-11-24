@@ -66,6 +66,9 @@ public class ServerUserData implements IUserDataGateway{
 		if(responseMessage.getID() == ServerMessage.MessageID.PERMISSION_ERROR){
 			throw new AuthenticationException("Do not have permissions for this.");
 		}
+		if(responseMessage.getID() == ServerMessage.MessageID.UNEXPECTED_MESSAGE_DATA_TYPE){
+			throw new IOException("Server didn't recognize the data it was sent.");
+		}
 		//
 		ServerSendMessage responseSendMessage = (ServerSendMessage)responseMessage.getObject();
 		//

@@ -1,18 +1,10 @@
 package lakehead.grouptwo.residence_management_system.implemented_gateways.server;
 //
-import java.io.IOException;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.io.InvalidClassException;
 import java.util.Vector;
-
+//
 import lakehead.grouptwo.residence_management_server.messages.MessageDataID;
 import lakehead.grouptwo.residence_management_server.messages.ServerCommandMessage;
-import lakehead.grouptwo.residence_management_server.messages.ServerMessage;
-import lakehead.grouptwo.residence_management_server.messages.ServerRequestMessage;
-import lakehead.grouptwo.residence_management_server.messages.ServerSendMessage;
-import lakehead.grouptwo.residence_management_system.data.AuthenticationException;
 import lakehead.grouptwo.residence_management_system.data.gateways.IResidenceDataGateway;
 import lakehead.grouptwo.residence_management_system.data.identifiers.ApplicationID;
 import lakehead.grouptwo.residence_management_system.data.identifiers.BuildingID;
@@ -23,9 +15,11 @@ import lakehead.grouptwo.residence_management_system.data.identifiers.UserID;
 public class ServerResidenceData implements IResidenceDataGateway{
 	private ConnectionToServer connectionToServer;
 	private ServerAccountData accountData = null;
+	private DataMessageHandler dataMessageHandler;
 	//
 	public ServerResidenceData(ConnectionToServer _connectionToServer){
 		connectionToServer = _connectionToServer;
+		dataMessageHandler = new DataMessageHandler(connectionToServer);
 	}
 	//
 	public void setAccountData(ServerAccountData _accountData){
@@ -47,102 +41,39 @@ public class ServerResidenceData implements IResidenceDataGateway{
 		}
 	}
 	//
-	private Object getFromServer(MessageDataID dataID, Object option) throws IOException, AuthenticationException{
-		try{
-			connectionToServer.sendMessage(new ServerMessage(ServerMessage.MessageID.REQUESTING_DATA, new ServerRequestMessage(dataID, option), getUserID(), getAuthKey()));
-		}catch(IOException e){
-			e.printStackTrace();
-			throw new IOException("Error while sending the request.");
-		}
-		//
-		ServerMessage responseMessage;
-		//
-		try{
-			responseMessage = connectionToServer.readMessage();
-		}catch(IOException e){
-			throw new IOException("Error while reading the response.");
-		}
-		//
-		if(responseMessage.getID() == ServerMessage.MessageID.ERROR){
-			throw new IOException("Server error while getting the response (1).");
-		}
-		if(responseMessage.getID() == ServerMessage.MessageID.AUTHENTICATION_ERROR){
-			throw new AuthenticationException("The user id and auth_key were not valid.");
-		}
-		if(responseMessage.getID() == ServerMessage.MessageID.PERMISSION_ERROR){
-			throw new AuthenticationException("Do not have permissions for this.");
-		}
-		//
-		ServerSendMessage responseSendMessage = (ServerSendMessage)responseMessage.getObject();
-		//
-		if(responseSendMessage.getID() != dataID){
-			throw new IOException("Server error while getting the response (2).");
-		}
-		//
-		return responseSendMessage.getObject();
-	}
-	private void sendToServer(ServerCommandMessage.CommandMessageID dataID, Vector<Object> option) throws IOException, AuthenticationException{
-		try{
-			connectionToServer.sendMessage(new ServerMessage(ServerMessage.MessageID.EXECUTE_COMMAND, new ServerCommandMessage(dataID, option), getUserID(), getAuthKey()));
-		}catch(IOException e){
-			e.printStackTrace();
-			throw new IOException("Error while sending the request.");
-		}
-		//
-		ServerMessage responseMessage;
-		//
-		try{
-			responseMessage = connectionToServer.readMessage();
-		}catch(IOException e){
-			throw new IOException("Client error while reading the response.");
-		}
-		//
-		if(responseMessage.getID() == ServerMessage.MessageID.ERROR){
-			throw new IOException("Server error while getting the response (1).");
-		}else if(responseMessage.getID() == ServerMessage.MessageID.AUTHENTICATION_ERROR){
-			throw new AuthenticationException("The user id and auth_key were not valid.");
-		}else if(responseMessage.getID() == ServerMessage.MessageID.PERMISSION_ERROR){
-			throw new AuthenticationException("Do not have permissions for this.");
-		}else if(responseMessage.getID() == ServerMessage.MessageID.OKAY){
-			return;
-		}else{
-			throw new IOException("Unknown error with the response. Request may or may not have gone through.");
-		}
-	}
-	//
 	@Override
 	public Vector<RoomID> getAllAvailableRoomsInBuilding(BuildingID buildingID) throws Exception{
-		return (Vector<RoomID>)getFromServer(MessageDataID.AVAILABLE_ROOMS_IN_BUILDING, buildingID);
+		return (Vector<RoomID>)dataMessageHandler.getDataMessageFromServer(MessageDataID.AVAILABLE_ROOMS_IN_BUILDING, buildingID, getUserID(), getAuthKey());
 	}
 	//
 	@Override
 	public long getNumberOfAvailableRoomsInBuilding(BuildingID buildingID) throws Exception{
-		return (long)getFromServer(MessageDataID.NUM_OF_AVAILABLE_ROOMS_IN_BUILDING, buildingID);
+		return (long)dataMessageHandler.getDataMessageFromServer(MessageDataID.NUM_OF_AVAILABLE_ROOMS_IN_BUILDING, buildingID, getUserID(), getAuthKey());
 	}
 	//
 	@Override
 	public Vector<UserID> getOccupantsOfRoom(RoomID roomID) throws Exception{
-		return (Vector<UserID>)getFromServer(MessageDataID.OCCUPANTS_OF_ROOM, roomID);
+		return (Vector<UserID>)dataMessageHandler.getDataMessageFromServer(MessageDataID.OCCUPANTS_OF_ROOM, roomID, getUserID(), getAuthKey());
 	}
 	//
 	@Override
 	public Vector<MessageID> getUsersReceivedMessages(UserID userID) throws Exception{
-		return (Vector<MessageID>)getFromServer(MessageDataID.USERS_RECEIVED_MESSAGES, userID);
+		return (Vector<MessageID>)dataMessageHandler.getDataMessageFromServer(MessageDataID.USERS_RECEIVED_MESSAGES, userID, getUserID(), getAuthKey());
 	}
 	//
 	@Override
 	public Vector<MessageID> getUsersUnreadReceivedMessages(UserID userID) throws Exception{
-		return (Vector<MessageID>)getFromServer(MessageDataID.USERS_UNREAD_RECEIVED_MESSAGES, userID);
+		return (Vector<MessageID>)dataMessageHandler.getDataMessageFromServer(MessageDataID.USERS_UNREAD_RECEIVED_MESSAGES, userID, getUserID(), getAuthKey());
 	}
 	//
 	@Override
 	public String getContentsOfMessage(MessageID messageID) throws Exception{
-		return (String)getFromServer(MessageDataID.CONTENTS_OF_MESSAGE, messageID);
+		return (String)dataMessageHandler.getDataMessageFromServer(MessageDataID.CONTENTS_OF_MESSAGE, messageID, getUserID(), getAuthKey());
 	}
 	//
 	@Override
 	public boolean getReadStatusOfMessage(MessageID messageID) throws Exception{
-		return (boolean)getFromServer(MessageDataID.READ_STATUS_OF_MESSAGE, messageID);
+		return (boolean)dataMessageHandler.getDataMessageFromServer(MessageDataID.READ_STATUS_OF_MESSAGE, messageID, getUserID(), getAuthKey());
 	}
 	//
 	@Override
@@ -150,7 +81,7 @@ public class ServerResidenceData implements IResidenceDataGateway{
 		Vector<Object> parameters = new Vector<Object>();
 		parameters.add(messageID);
 		parameters.add(setTo);
-		sendToServer(ServerCommandMessage.CommandMessageID.SET_MESSAGE_READ_STATUS, parameters);
+		dataMessageHandler.sendDataMessageToServer(ServerCommandMessage.CommandMessageID.SET_MESSAGE_READ_STATUS, parameters, getUserID(), getAuthKey());
 	}
 	//
 	@Override
@@ -159,36 +90,36 @@ public class ServerResidenceData implements IResidenceDataGateway{
 		parameters.add(fromUser);
 		parameters.add(toUser);
 		parameters.add(contents);
-		sendToServer(ServerCommandMessage.CommandMessageID.SEND_MESSAGE_TO_USER, parameters);
+		dataMessageHandler.sendDataMessageToServer(ServerCommandMessage.CommandMessageID.SEND_MESSAGE_TO_USER, parameters, getUserID(), getAuthKey());
 	}
 	//
 	@Override
 	public RoomID getRoomOccupiedByUser(UserID userID) throws Exception{
-		return (RoomID)getFromServer(MessageDataID.ROOM_OCCUPIED_BY_USER, userID);
+		return (RoomID)dataMessageHandler.getDataMessageFromServer(MessageDataID.ROOM_OCCUPIED_BY_USER, userID, getUserID(), getAuthKey());
 	}
 	//
 	@Override
 	public BuildingID getBuildingThatContainsRoom(RoomID roomID) throws Exception{
-		return (BuildingID)getFromServer(MessageDataID.BUILDING_THAT_CONTAINS_ROOM, roomID);
+		return (BuildingID)dataMessageHandler.getDataMessageFromServer(MessageDataID.BUILDING_THAT_CONTAINS_ROOM, roomID, getUserID(), getAuthKey());
 	}
 	//
 	@Override
 	public UserID getManagerOfBuilding(BuildingID buildingID) throws Exception{
-		return (UserID)getFromServer(MessageDataID.MANAGER_OF_BUILDING, buildingID);
+		return (UserID)dataMessageHandler.getDataMessageFromServer(MessageDataID.MANAGER_OF_BUILDING, buildingID, getUserID(), getAuthKey());
 	}
 	@Override
 	public Vector<BuildingID> getBuildingsManagedByUser(UserID userID) throws Exception{
-		return (Vector<BuildingID>)getFromServer(MessageDataID.BUILDINGS_MANAGED_BY_USER, userID);
+		return (Vector<BuildingID>)dataMessageHandler.getDataMessageFromServer(MessageDataID.BUILDINGS_MANAGED_BY_USER, userID, getUserID(), getAuthKey());
 	}
 	//
 	@Override
 	public Vector<RoomID> getAllRoomsInBuilding(BuildingID buildingID) throws Exception{
-		return (Vector<RoomID>)getFromServer(MessageDataID.ALL_ROOMS_IN_BUILDING, buildingID);
+		return (Vector<RoomID>)dataMessageHandler.getDataMessageFromServer(MessageDataID.ALL_ROOMS_IN_BUILDING, buildingID, getUserID(), getAuthKey());
 	}
 	//
 	@Override
 	public long getNumberOfRoomsInBuilding(BuildingID buildingID) throws Exception{
-		return (long)getFromServer(MessageDataID.NUMBER_OF_ROOMS_IN_BUILDING, buildingID);
+		return (long)dataMessageHandler.getDataMessageFromServer(MessageDataID.NUMBER_OF_ROOMS_IN_BUILDING, buildingID, getUserID(), getAuthKey());
 	}
 	//
 	@Override
@@ -197,27 +128,27 @@ public class ServerResidenceData implements IResidenceDataGateway{
 		parameters.add(userID);
 		parameters.add(yearLevel);
 		parameters.add(requests);
-		sendToServer(ServerCommandMessage.CommandMessageID.APPLY_FOR_RESIDENCE, parameters);
+		dataMessageHandler.sendDataMessageToServer(ServerCommandMessage.CommandMessageID.APPLY_FOR_RESIDENCE, parameters, getUserID(), getAuthKey());
 	}
 	//
 	@Override
 	public Vector<ApplicationID> getResidenceApplications(int numToFetch) throws Exception{
-		return (Vector<ApplicationID>)getFromServer(MessageDataID.RESIDENCE_APPLICATIONS, numToFetch);
+		return (Vector<ApplicationID>)dataMessageHandler.getDataMessageFromServer(MessageDataID.RESIDENCE_APPLICATIONS, numToFetch, getUserID(), getAuthKey());
 	}
 	//
 	@Override
 	public UserID getApplicationUser(ApplicationID applicationID) throws Exception{
-		return (UserID)getFromServer(MessageDataID.APPLICATION_USER, applicationID);
+		return (UserID)dataMessageHandler.getDataMessageFromServer(MessageDataID.APPLICATION_USER, applicationID, getUserID(), getAuthKey());
 	}
 	//
 	@Override
 	public int getApplicationYearLevel(ApplicationID applicationID) throws Exception{
-		return (int)getFromServer(MessageDataID.APPLICATION_YEAR_LEVEL, applicationID);
+		return (int)dataMessageHandler.getDataMessageFromServer(MessageDataID.APPLICATION_YEAR_LEVEL, applicationID, getUserID(), getAuthKey());
 	}
 	//
 	@Override
 	public String getApplicationSpecialRequests(ApplicationID applicationID) throws Exception{
-		return (String)getFromServer(MessageDataID.APPLICATION_SPECIAL_REQUESTS, applicationID);
+		return (String)dataMessageHandler.getDataMessageFromServer(MessageDataID.APPLICATION_SPECIAL_REQUESTS, applicationID, getUserID(), getAuthKey());
 	}
 	//
 	@Override
@@ -225,18 +156,18 @@ public class ServerResidenceData implements IResidenceDataGateway{
 		Vector<Object> parameters = new Vector<Object>();
 		parameters.add(userID);
 		parameters.add(roomID);
-		sendToServer(ServerCommandMessage.CommandMessageID.APPLY_FOR_RESIDENCE, parameters);
+		dataMessageHandler.sendDataMessageToServer(ServerCommandMessage.CommandMessageID.APPLY_FOR_RESIDENCE, parameters, getUserID(), getAuthKey());
 	}
 	//
 	@Override
 	public void removeApplication(ApplicationID applicationID) throws Exception{
 		Vector<Object> parameters = new Vector<Object>();
 		parameters.add(applicationID);
-		sendToServer(ServerCommandMessage.CommandMessageID.REMOVE_APPLICATION, parameters);
+		dataMessageHandler.sendDataMessageToServer(ServerCommandMessage.CommandMessageID.REMOVE_APPLICATION, parameters, getUserID(), getAuthKey());
 	}
 	//
 	@Override
 	public long getNumberOfApplications() throws Exception{
-		return (long)getFromServer(MessageDataID.NUMBER_OF_APPLICATIONS, null);
+		return (long)dataMessageHandler.getDataMessageFromServer(MessageDataID.NUMBER_OF_APPLICATIONS, null, getUserID(), getAuthKey());
 	}
 }

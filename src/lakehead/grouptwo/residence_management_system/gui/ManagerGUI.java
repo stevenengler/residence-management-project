@@ -1,10 +1,14 @@
 package lakehead.grouptwo.residence_management_system.gui;
 
 import java.awt.Color;
+import java.awt.Component;
+import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.Vector;
 
+import javax.swing.Box;
+import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
@@ -19,10 +23,8 @@ import lakehead.grouptwo.residence_management_system.data.gateways.IResidenceDat
 import lakehead.grouptwo.residence_management_system.data.gateways.IUserDataGateway;
 import lakehead.grouptwo.residence_management_system.data.identifiers.MessageID;
 
-public class ManagerGUI extends JFrame{
+public class ManagerGUI extends VerticallyStackedMenu{
 	private static final long serialVersionUID = -5363908732688095195L;
-	//
-	private JPanel contentPane;
 	//
 	private IResidenceDataGateway residenceDataGateway;
 	private IUserDataGateway userDataGateway;
@@ -33,14 +35,21 @@ public class ManagerGUI extends JFrame{
 		userDataGateway = _userDataGateway;
 		accountData = _accountData;
 		//
-		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		setBounds(100, 100, 406, 226);
-		contentPane = new JPanel();
-		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
-		setContentPane(contentPane);
-		contentPane.setLayout(null);
-		setLocationRelativeTo(null);
+		setTitle("Manager Homepage");
+		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		//
+		contentPane.add(createReadMessagesButton());
+		contentPane.add(createVerticalPaddingComponent());
+		contentPane.add(createWriteMessageButton());
+		contentPane.add(createVerticalPaddingComponent());
+		contentPane.add(createAssignHousingButton());
+		contentPane.add(createVerticalPaddingComponent());
+		contentPane.add(createRoomInfoButton());
+		//
+		pack();
+	}
+	//
+	private JButton createReadMessagesButton(){
 		int messageCount;
 		try{
 			Vector<MessageID> messages = new User(accountData.getThisUserID(), residenceDataGateway, userDataGateway).getUnreadReceivedMessages();
@@ -49,25 +58,19 @@ public class ManagerGUI extends JFrame{
 			messageCount = -1;
 		}
 		//
-		final JButton readMessageButton = new JButton("Read Messages: " + messageCount + " Outstanding");
-		readMessageButton.setBounds(10, 21, 370, 43);
+		JButton readMessageButton = new JButton("Read Messages: " + messageCount + " Outstanding");
+		setDefaultMenuButtonProperties(readMessageButton);
+		//
 		readMessageButton.setBackground(Color.red);
 		UIManager.put("Button.disabledText", Color.BLACK);
 		if(messageCount <= 0){
 			readMessageButton.setBackground(Color.green);
 			readMessageButton.setEnabled(false);
 		}
-		
+		//
 		readMessageButton.addActionListener(new ActionListener(){
 			
 			public void actionPerformed(ActionEvent e){
-				/*
-				messageCount = messageCount - 1;
-				readMessageButton.setText("Read Messages: " + messageCount + " Outstanding");
-				if(messageCount <= 0){
-					readMessageButton.setBackground(Color.green);
-				}
-				*/
 				String messageContents = "";
 				try{
 					Vector<MessageID> messages = new User(accountData.getThisUserID(), residenceDataGateway, userDataGateway).getUnreadReceivedMessages();
@@ -80,35 +83,47 @@ public class ManagerGUI extends JFrame{
 				}
 				setVisible(false);
 				JOptionPane.showMessageDialog(null, messageContents);
-				ManagerGUI MAN = new ManagerGUI(residenceDataGateway, userDataGateway, accountData);
-				MAN.setVisible(true);
+				ManagerGUI managerGUI = new ManagerGUI(residenceDataGateway, userDataGateway, accountData);
+				managerGUI.setVisible(true);
 			}
+			
 		});
-		contentPane.add(readMessageButton);
-		
+		//
+		return readMessageButton;
+	}
+	//
+	private JButton createWriteMessageButton(){
 		JButton writeMessageButton = new JButton("Send Housing Wide Message");
-		writeMessageButton.setBounds(10, 75, 370, 43);
+		setDefaultMenuButtonProperties(writeMessageButton);
+		//
 		writeMessageButton.addActionListener(new ActionListener(){
 			
 			public void actionPerformed(ActionEvent e){
 				
-				ManagerSendMessageGUI MANMES = new ManagerSendMessageGUI(residenceDataGateway, userDataGateway, accountData);
-				MANMES.setVisible(true);
+				ManagerSendMessageGUI sendMessageGUI = new ManagerSendMessageGUI(residenceDataGateway, userDataGateway, accountData);
+				sendMessageGUI.setVisible(true);
 				setVisible(false);
 			}
+			
 		});
-		contentPane.add(writeMessageButton);
-		
+		//
+		return writeMessageButton;
+	}
+	//
+	private JButton createAssignHousingButton(){
 		String numOfApplications;
-		
+		//
 		try{
 			numOfApplications = ""+residenceDataGateway.getNumberOfApplications();
 		}catch(Exception e1){
 			numOfApplications = "Error";
 		}
+		//
 		JButton assignHousingButton = new JButton("Assign Housing: " + numOfApplications + " Unassigned");
-		assignHousingButton.setBounds(10, 129, 370, 43);
+		setDefaultMenuButtonProperties(assignHousingButton);
+		//
 		assignHousingButton.setBackground(Color.red);
+		//
 		try{
 			if(residenceDataGateway.getNumberOfApplications() <= 0){
 				assignHousingButton.setBackground(Color.green);
@@ -116,24 +131,35 @@ public class ManagerGUI extends JFrame{
 		}catch(Exception e1){
 			
 		}
-		
+		//
 		assignHousingButton.addActionListener(new ActionListener(){
 			
 			public void actionPerformed(ActionEvent e){
 				
-				ManagerAssignRoomGUI MANASS = new ManagerAssignRoomGUI(residenceDataGateway, userDataGateway, accountData);
-				MANASS.setVisible(true);
+				ManagerAssignRoomGUI assignRoomGUI = new ManagerAssignRoomGUI(residenceDataGateway, userDataGateway, accountData);
+				assignRoomGUI.setVisible(true);
 				setVisible(false);
-				
-				/*
-				assignCount = assignCount - 1;
-				assignHousingButton.setText("Assign Housing: " + assignCount + " Unassigned");
-				if(assignCount <= 0){
-					assignHousingButton.setBackground(Color.green);
-				}
-				*/
 			}
+			
 		});
-		contentPane.add(assignHousingButton);
+		//
+		return assignHousingButton;
+	}
+	private JButton createRoomInfoButton(){
+		JButton roomInfoButton = new JButton("Veiw Room Information");
+		setDefaultMenuButtonProperties(roomInfoButton);
+		//
+		roomInfoButton.addActionListener(new ActionListener() {
+			
+			public void actionPerformed(ActionEvent e) {
+	                	
+				RoomInfoGUI roomInfoGUI = new RoomInfoGUI();
+	            roomInfoGUI.setVisible(true);
+	            setVisible(false);
+			}
+			
+		});
+		//
+		return roomInfoButton;
 	}
 }

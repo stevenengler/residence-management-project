@@ -1,6 +1,9 @@
 package lakehead.grouptwo.residence_management_system.gui;
 
 import java.awt.Color;
+import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.Vector;
@@ -20,42 +23,61 @@ import lakehead.grouptwo.residence_management_system.data.gateways.IResidenceDat
 import lakehead.grouptwo.residence_management_system.data.gateways.IUserDataGateway;
 import lakehead.grouptwo.residence_management_system.data.identifiers.MessageID;
 
-class ResidentGUI extends JFrame{
+class ResidentGUI extends VerticallyStackedMenu{
 	private static final long serialVersionUID = -8414854513911850688L;
 	//
 	private IResidenceDataGateway residenceDataGateway;
 	private IUserDataGateway userDataGateway;
 	private IAccountData accountData;
+	private User currentUser;
 	//
 	public ResidentGUI(IResidenceDataGateway _residenceDataGateway, IUserDataGateway _userDataGateway, IAccountData _accountData){
 		residenceDataGateway = _residenceDataGateway;
 		userDataGateway = _userDataGateway;
 		accountData = _accountData;
 		//
-		setTitle("Resident Infromation ");
-		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		setSize(522, 257);
-		setLocationRelativeTo(null);
-		
-		JPanel panel = new JPanel();
-		panel.setBorder(new EmptyBorder(5, 5, 5, 5));
-		setContentPane(panel);
-		panel.setLayout(null);
-		
+		currentUser = new User(accountData.getThisUserID(), residenceDataGateway, userDataGateway);
+		//
+		setTitle("Resident Home");
+		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+		//
+		JPanel labelsPanel = createLeftAlignedJPanel();
 		JLabel userLabel = new JLabel("Personal Information");
-		userLabel.setBounds(185, 5, 180, 25);
-		panel.add(userLabel);
-		
-		User currentUser = new User(accountData.getThisUserID(), residenceDataGateway, userDataGateway);
-		JLabel userLabelFirstName;
+		//
+		labelsPanel.add(userLabel);
+		//
+		contentPane.add(labelsPanel);
+		contentPane.add(createVerticalPaddingComponent());
+		contentPane.add(createUserNameLabel());
+		contentPane.add(createRoomNumberLabel());
+		//
+		contentPane.add(createVerticalPaddingComponent());
+		contentPane.add(createReadMessagesButton());
+		contentPane.add(createVerticalPaddingComponent());
+		contentPane.add(sendMessageToHousingButton());
+		//
+		pack();
+	}
+	//
+	private JPanel createUserNameLabel(){
+		JPanel labelsPanel = createLeftAlignedJPanel();
+		//
+		JLabel userNameLabel;
+		//
 		try{
-			userLabelFirstName = new JLabel(currentUser.getFirstName() + " " + currentUser.getLastName());
+			userNameLabel = new JLabel(currentUser.getFirstName() + " " + currentUser.getLastName());
 		}catch(Exception e1){
-			userLabelFirstName = new JLabel("Error: Couldn't get first name.");
+			userNameLabel = new JLabel("Error: Couldn't get first name.");
 		}
-		userLabelFirstName.setBounds(10, 30, 180, 25);
-		panel.add(userLabelFirstName);
-		
+		//
+		labelsPanel.add(userNameLabel);
+		//
+		return labelsPanel;
+	}
+	//
+	private JPanel createRoomNumberLabel(){
+		JPanel labelsPanel = createLeftAlignedJPanel();
+		//
 		String roomMessage;
 		try{
 			if(currentUser.getResidenceRoom() == null){
@@ -66,32 +88,15 @@ class ResidentGUI extends JFrame{
 		}catch(Exception e){
 			roomMessage = "Error";
 		}
-		JLabel userLabelLastName = new JLabel("Currently in Room #: "+roomMessage);
-		userLabelLastName.setBounds(10, 50, 580, 25);
-		panel.add(userLabelLastName);
-		
-		/*
-		JLabel userLabelLastName = new JLabel("Student Street Address");
-		userLabelLastName.setBounds(10, 50, 180, 25);
-		panel.add(userLabelLastName);
-		
-		JLabel userLabelCity = new JLabel("Student City");
-		userLabelCity.setBounds(10, 70, 180, 25);
-		panel.add(userLabelCity);
-		
-		JLabel userLabelProv = new JLabel("Student Province");
-		userLabelProv.setBounds(10, 90, 180, 25);
-		panel.add(userLabelProv);
-		
-		JLabel userLabelPostalCode = new JLabel("Student Postal Code");
-		userLabelPostalCode.setBounds(10, 110, 180, 25);
-		panel.add(userLabelPostalCode);
-		
-		JLabel userLabelContry = new JLabel("Student Country");
-		userLabelContry.setBounds(10, 130, 180, 25);
-		panel.add(userLabelContry);
-		*/
 		//
+		JLabel userRoomNumberLabel = new JLabel("Currently in Room #: "+roomMessage);
+		//
+		labelsPanel.add(userRoomNumberLabel);
+		//
+		return labelsPanel;
+	}
+	//
+	private JButton createReadMessagesButton(){
 		int messageCount;
 		try{
 			Vector<MessageID> messages = new User(accountData.getThisUserID(), residenceDataGateway, userDataGateway).getUnreadReceivedMessages();
@@ -100,8 +105,10 @@ class ResidentGUI extends JFrame{
 			messageCount = -1;
 		}
 		//
-		final JButton messageButton = new JButton("Read Messages: " + messageCount + " Outstanding");
-		messageButton.setBounds(10, 170, 230, 35);
+		JButton messageButton = new JButton("Read Messages: " + messageCount + " Outstanding");
+		//
+		setDefaultMenuButtonProperties(messageButton);
+		//
 		messageButton.setBackground(Color.red);
 		UIManager.put("Button.disabledText", Color.BLACK);
 		if(messageCount <= 0){
@@ -123,24 +130,31 @@ class ResidentGUI extends JFrame{
 				}
 				setVisible(false);
 				JOptionPane.showMessageDialog(null, messageContents);
-				ResidentGUI Res = new ResidentGUI(residenceDataGateway, userDataGateway, accountData);
-				Res.setVisible(true);
+				ResidentGUI residentGUI = new ResidentGUI(residenceDataGateway, userDataGateway, accountData);
+				residentGUI.setVisible(true);
 			}
+			
 		});
-		panel.add(messageButton);
-		
+		//
+		return messageButton;
+	}
+	//
+	private JButton sendMessageToHousingButton(){
 		JButton submitButton = new JButton("Submit Message to Housing");
-		submitButton.setBounds(255, 170, 240, 35);
+		//
+		setDefaultMenuButtonProperties(submitButton);
+		//
 		submitButton.addActionListener(new ActionListener(){
 			
 			public void actionPerformed(ActionEvent e){
 				
-				StudentSendMessageGUI STDMES = new StudentSendMessageGUI(residenceDataGateway, userDataGateway, accountData);
-				STDMES.setVisible(true);
+				StudentSendMessageGUI studentSendMessageGUI = new StudentSendMessageGUI(residenceDataGateway, userDataGateway, accountData);
+				studentSendMessageGUI.setVisible(true);
 				setVisible(false);
 			}
+			
 		});
-		
-		panel.add(submitButton);
+		//
+		return submitButton;
 	}
 }

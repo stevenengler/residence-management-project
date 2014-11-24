@@ -9,7 +9,7 @@ public class ServerCommandMessage implements Serializable{
 	public enum CommandMessageID {
 									SET_MESSAGE_READ_STATUS, SEND_MESSAGE_TO_USER, APPLY_FOR_RESIDENCE,
 									SET_USER_ROOM, REMOVE_APPLICATION
-									};
+								};
 	//
 	private CommandMessageID id;
 	private Vector<Object> objects;

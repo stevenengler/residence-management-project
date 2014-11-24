@@ -7,7 +7,11 @@ import lakehead.grouptwo.residence_management_system.data.identifiers.UserID;
 public class ServerMessage implements Serializable{
 	private static final long serialVersionUID = -6152139352819626427L;
 	//
-	public enum MessageID {REQUESTING_DATA, SENDING_DATA, EXECUTE_COMMAND, LOGIN_REQUEST, LOGIN_RESPONSE, CLOSE_CONNECTION, OKAY, ERROR, AUTHENTICATION_ERROR, PERMISSION_ERROR};
+	public enum MessageID	{
+								REQUESTING_DATA, SENDING_DATA, EXECUTE_COMMAND, LOGIN_REQUEST,
+								LOGIN_RESPONSE, CLOSE_CONNECTION, OKAY, ERROR,
+								UNEXPECTED_MESSAGE_DATA_TYPE, AUTHENTICATION_ERROR, PERMISSION_ERROR
+							};
 	//
 	private MessageID id;
 	private Object object;

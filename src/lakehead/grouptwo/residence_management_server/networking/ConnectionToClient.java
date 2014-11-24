@@ -7,6 +7,7 @@ import java.io.ObjectOutputStream;
 //
 import java.net.Socket;
 import java.net.SocketException;
+import java.net.SocketTimeoutException;
 
 import lakehead.grouptwo.residence_management_server.ResidenceManagementServerProtocol;
 import lakehead.grouptwo.residence_management_server.messages.ServerMessage;
@@ -33,23 +34,37 @@ public class ConnectionToClient implements Runnable{
 	@Override
 	public void run(){
 		try{
-			// String fromServer;
-			// BufferedReader in = new BufferedReader(new
-			// InputStreamReader(connection.getInputStream()));
-			//
 			outStream = new ObjectOutputStream(thisSocket.getOutputStream());
 			inStream = new ObjectInputStream(thisSocket.getInputStream());
-			//
-			while(running){
-				serverProtocol.processFromClient((ServerMessage)inStream.readObject(), this);
-			}
 		}catch(SocketException e){
-			// nothing can be done here, the connection's closed
+			// nothing can be done here, the connection's probably closed
 		}catch(EOFException e){
-			// nothing can be done here, the connection's closed
-		}catch(Exception e){
-			System.out.println("Some sort of error here...");
+			// nothing can be done here, the connection's probably closed
+		}catch(IOException e){
+			// should show this error to the server admin since it's an unknown error
 			e.printStackTrace();
+		}
+		//
+		try{
+			while(running){
+				try{
+					ServerMessage receivedMessage = readMessage();
+					serverProtocol.processFromClient(receivedMessage, this);
+				}catch(SocketTimeoutException e){
+					// do nothing and restart loop
+				}catch(SocketException e){
+					// close connection
+					running = false;
+				}
+			}
+		}catch(IOException e){
+			// if it's not a ServerMessage object, then we don't know what it is
+			try{
+				e.printStackTrace();
+				sendMessage(new ServerMessage(ServerMessage.MessageID.UNEXPECTED_MESSAGE_DATA_TYPE, null, null, null));
+			}catch(IOException e1){
+				// nothing can be done here, the connection's probably closed
+			}
 		}
 		//
 		try{
@@ -60,15 +75,25 @@ public class ConnectionToClient implements Runnable{
 		running = false;
 	}
 	//
-	public void sendMessage(ServerMessage message) throws IOException{
+	public void sendMessage(ServerMessage message) throws SocketException, IOException{
 		outStream.writeObject(message);
+		outStream.flush();
 	}
 	public ServerMessage readMessage() throws IOException{
 		try{
-			return (ServerMessage)inStream.readObject();
+			Object sentFromClient = inStream.readObject();
+			if(sentFromClient instanceof ServerMessage){
+				return (ServerMessage)sentFromClient;
+			}else{
+				throw new IOException("Received object that wasn't the correct type (ServerMessage).");
+			}
 		}catch(ClassNotFoundException e){
-			System.out.println("Not using same message version.");
-			throw new IOException();
+			// problem with the serializable UID
+			throw new IOException("Not using same message version.", e);
+		}catch(SocketException e){
+			// connection was likely closed, nothing we can do here
+			throw e;
+			
 		}
 	}
 	//

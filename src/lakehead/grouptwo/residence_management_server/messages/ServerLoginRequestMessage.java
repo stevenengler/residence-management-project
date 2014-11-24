@@ -5,8 +5,6 @@ import java.io.Serializable;
 public class ServerLoginRequestMessage implements Serializable{
 	private static final long serialVersionUID = 4754047671052384974L;
 	//
-	//public enum RequestMessageID {USER_FIRSTNAME, USER_LASTNAME};
-	//
 	private String username;
 	private char[] password;
 	private String encryptionMethod;
