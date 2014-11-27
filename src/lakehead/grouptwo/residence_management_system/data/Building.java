@@ -6,7 +6,6 @@ import lakehead.grouptwo.residence_management_system.data.gateways.IResidenceDat
 import lakehead.grouptwo.residence_management_system.data.gateways.IUserDataGateway;
 import lakehead.grouptwo.residence_management_system.data.identifiers.BuildingID;
 import lakehead.grouptwo.residence_management_system.data.identifiers.RoomID;
-import lakehead.grouptwo.residence_management_system.data.identifiers.UserID;
 //
 public class Building{
 	public final BuildingID id;
@@ -23,6 +22,7 @@ public class Building{
 		return residenceData.getNumberOfAvailableRoomsInBuilding(id);
 	}
 	public Vector<Room> getAllAvailableRooms() throws Exception{
+		// get the RoomIDs from the gateway and create Room objects from them
 		Vector<RoomID> ids = residenceData.getAllAvailableRoomsInBuilding(id);
 		Vector<Room> rooms = new Vector<Room>();
 		for(int i=0; i<ids.size(); i++){
@@ -34,6 +34,7 @@ public class Building{
 		return new User(residenceData.getManagerOfBuilding(id), residenceData, userData);
 	}
 	public Vector<Room> getAllRooms() throws Exception{
+		// get the RoomIDs from the gateway and create Room objects from them
 		Vector<RoomID> ids = residenceData.getAllRoomsInBuilding(id);
 		Vector<Room> rooms = new Vector<Room>();
 		for(int i=0; i<ids.size(); i++){
@@ -43,5 +44,8 @@ public class Building{
 	}
 	public long getNumberOfRooms() throws Exception{
 		return residenceData.getNumberOfRoomsInBuilding(id);
+	}
+	public String getName() throws Exception{
+		return residenceData.getNameOfBuilding(id);
 	}
 }

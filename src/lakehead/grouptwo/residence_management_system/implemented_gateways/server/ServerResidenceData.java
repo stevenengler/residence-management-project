@@ -1,6 +1,5 @@
 package lakehead.grouptwo.residence_management_system.implemented_gateways.server;
 //
-import java.io.InvalidClassException;
 import java.util.Vector;
 //
 import lakehead.grouptwo.residence_management_server.messages.MessageDataID;
@@ -156,7 +155,7 @@ public class ServerResidenceData implements IResidenceDataGateway{
 		Vector<Object> parameters = new Vector<Object>();
 		parameters.add(userID);
 		parameters.add(roomID);
-		dataMessageHandler.sendDataMessageToServer(ServerCommandMessage.CommandMessageID.APPLY_FOR_RESIDENCE, parameters, getUserID(), getAuthKey());
+		dataMessageHandler.sendDataMessageToServer(ServerCommandMessage.CommandMessageID.SET_USER_ROOM, parameters, getUserID(), getAuthKey());
 	}
 	//
 	@Override
@@ -169,5 +168,21 @@ public class ServerResidenceData implements IResidenceDataGateway{
 	@Override
 	public long getNumberOfApplications() throws Exception{
 		return (long)dataMessageHandler.getDataMessageFromServer(MessageDataID.NUMBER_OF_APPLICATIONS, null, getUserID(), getAuthKey());
+	}
+	@Override
+	public Vector<BuildingID> getAllBuildings() throws Exception{
+		return (Vector<BuildingID>)dataMessageHandler.getDataMessageFromServer(MessageDataID.ALL_BUILDINGS, null, getUserID(), getAuthKey());
+	}
+	@Override
+	public String getNameOfBuilding(BuildingID buildingID) throws Exception{
+		return (String)dataMessageHandler.getDataMessageFromServer(MessageDataID.NAME_OF_BUILDING, buildingID, getUserID(), getAuthKey());
+	}
+	@Override
+	public int getCapacityOfRoom(RoomID roomID) throws Exception{
+		return (int)dataMessageHandler.getDataMessageFromServer(MessageDataID.CAPACITY_OF_ROOM, roomID, getUserID(), getAuthKey());
+	}
+	@Override
+	public String getDevicesInRoom(RoomID roomID) throws Exception{
+		return (String)dataMessageHandler.getDataMessageFromServer(MessageDataID.DEVICES_IN_ROOM, roomID, getUserID(), getAuthKey());
 	}
 }

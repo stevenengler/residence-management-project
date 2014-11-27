@@ -3,6 +3,9 @@ package lakehead.grouptwo.residence_management_server.messages;
 import java.io.Serializable;
 
 public class ServerLoginRequestMessage implements Serializable{
+	//
+	// the client sends this message to the server to attempt to login
+	//
 	private static final long serialVersionUID = 4754047671052384974L;
 	//
 	private String username;

@@ -41,6 +41,8 @@ public class ResidenceManagementServerProtocol{
 	}
 	//
 	public void processFromClient(ServerMessage message, ConnectionToClient connection){
+		// process a message from the client
+		//
 		ServerMessage.MessageID messageID = message.getID();
 		//
 		boolean messageObjectWasCorrectType = true;
@@ -79,6 +81,7 @@ public class ResidenceManagementServerProtocol{
 		
 		if(!messageObjectWasCorrectType){
 			try{
+				// tell the client that the message type was wrong
 				connection.sendMessage(new ServerMessage(ServerMessage.MessageID.UNEXPECTED_MESSAGE_DATA_TYPE, null, null, null));
 			}catch(IOException e1){
 				// nothing can be done here, the connection's probably closed
@@ -92,12 +95,15 @@ public class ResidenceManagementServerProtocol{
 		//	1)	Need to set permissions so logged in user can't get any user's information such as full name (and only their own full name)
 		//	2)	Need to prevent crashes caused by incorrect data types being sent and then casted to the wrong type
 		//
+		// NOTE: Although much of the code looks repetitive, different cases require different permissions and different gateway calls
+		//
 		MessageDataID messageID = message.getID();
 		ServerSendMessage messageToSend = null;
 		//
 		boolean sendErrorMessage = false;
 		boolean sendAuthenticationErrorMessage = false;
 		boolean sendPermissionErrorMessage = false;
+		// if there was a problem, send a different message instead
 		//
 		try{
 			if(messageID == MessageDataID.USER_FIRSTNAME){
@@ -228,8 +234,30 @@ public class ResidenceManagementServerProtocol{
 				}else{
 					sendPermissionErrorMessage = true;
 				}
+			}else if(messageID == MessageDataID.ALL_BUILDINGS){
+				if(getClientPermissions(userID, authKey) > 0){
+					messageToSend = new ServerSendMessage(messageID, residenceDataGateway.getAllBuildings());
+				}else{
+					sendPermissionErrorMessage = true;
+				}
+			}else if(messageID == MessageDataID.NAME_OF_BUILDING){
+				// no permission checking necessary since anyone can view this
+				messageToSend = new ServerSendMessage(messageID, residenceDataGateway.getNameOfBuilding((BuildingID)message.getObject()));
+			}else if(messageID == MessageDataID.CAPACITY_OF_ROOM){
+				if(getClientPermissions(userID, authKey) > 0){
+					messageToSend = new ServerSendMessage(messageID, residenceDataGateway.getCapacityOfRoom((RoomID)message.getObject()));
+				}else{
+					sendPermissionErrorMessage = true;
+				}
+			}else if(messageID == MessageDataID.DEVICES_IN_ROOM){
+				if(getClientPermissions(userID, authKey) > 0){
+					messageToSend = new ServerSendMessage(messageID, residenceDataGateway.getDevicesInRoom((RoomID)message.getObject()));
+				}else{
+					sendPermissionErrorMessage = true;
+				}
 			}
 		}catch(Exception e){
+			e.printStackTrace();
 			sendErrorMessage = true;
 		}
 		//
@@ -238,6 +266,7 @@ public class ResidenceManagementServerProtocol{
 			// if there was no error with the permissions, then it doesn't matter if the user's credentials were okay
 			if(getClientPermissions(userID, authKey) == -1){
 				sendAuthenticationErrorMessage = true;
+				sendPermissionErrorMessage = false;
 			}
 		}
 		//
@@ -267,6 +296,8 @@ public class ResidenceManagementServerProtocol{
 		//	1)	Need to set permissions so logged in user can't get any user's information such as full name (and only their own full name)
 		//	2)	Need to prevent crashes caused by incorrect data types being sent and then casted to the wrong type
 		//
+		// NOTE: Although much of the code looks repetitive, different cases require different permissions and different gateway calls
+		//
 		NOTE ABOUT READING FROM VECTOR:
 			Elements from the messageObjects vector are removed from the beginning when they are passed to
 			the gateway function. This way each parameter can use messageObjects.get(0) to get the next
@@ -288,6 +319,7 @@ public class ResidenceManagementServerProtocol{
 		boolean sendWrongDataTypeErrorMessage = false;
 		boolean sendAuthenticationErrorMessage = false;
 		boolean sendPermissionErrorMessage = false;
+		// if there was a problem, send a different message instead
 		//
 		try{
 			if(messageID == ServerCommandMessage.CommandMessageID.SET_MESSAGE_READ_STATUS){
@@ -314,12 +346,6 @@ public class ResidenceManagementServerProtocol{
 				}else{
 					sendPermissionErrorMessage = true;
 				}
-			}else if(messageID == ServerCommandMessage.CommandMessageID.SET_USER_ROOM){
-				if(getClientPermissions(userID, authKey) > 0){
-					residenceDataGateway.setUserRoom((UserID)messageObjects.remove(0), (RoomID)messageObjects.remove(0));
-				}else{
-					sendPermissionErrorMessage = true;
-				}
 			}else if(messageID == ServerCommandMessage.CommandMessageID.REMOVE_APPLICATION){
 				if(getClientPermissions(userID, authKey) > 0){
 					residenceDataGateway.removeApplication((ApplicationID)messageObjects.remove(0));
@@ -331,6 +357,7 @@ public class ResidenceManagementServerProtocol{
 			// there was a problem casting one of the received objects
 			sendWrongDataTypeErrorMessage = true;
 		}catch(Exception e){
+			e.printStackTrace();
 			sendErrorMessage = true;
 		}
 		//
@@ -339,6 +366,7 @@ public class ResidenceManagementServerProtocol{
 			// if there was no error with the permissions, then it doesn't matter if the user's credentials were okay
 			if(getClientPermissions(userID, authKey) == -1){
 				sendAuthenticationErrorMessage = true;
+				sendPermissionErrorMessage = false;
 			}
 		}
 		//
@@ -364,13 +392,16 @@ public class ResidenceManagementServerProtocol{
 			st = dbConnection.prepareStatement("SELECT user_id, auth_key, password FROM user_accounts WHERE username = ? LIMIT 1");
 			st.setString(1, message.getUsername());
 		}catch(SQLException e){
-			//throw new AuthenticationException("Something went really wrong :(");
+			// there was an error
 			try{
+				// tell the client there was an error
 				connection.sendMessage(new ServerMessage(ServerMessage.MessageID.ERROR,null,null,null));
 			}catch(IOException e1){
+				// couldn't send the message: this would cause the client to freeze, which wouldn't be good
 				e1.printStackTrace();
 			}
 			e.printStackTrace();
+			// nothing else can be done so return
 			return;
 		}
 		//
@@ -383,13 +414,14 @@ public class ResidenceManagementServerProtocol{
 					//NOTE: Since using Strings for passwords should be avoided, a different hashing algorithm should be used in the future
 					UserID userID = new UserID(rs.getLong(1));
 					char[] authKey = rs.getString(2).toCharArray();
+					// send the auth key to the client
 					try{
 						connection.sendMessage(new ServerMessage(ServerMessage.MessageID.LOGIN_RESPONSE, new ServerLoginResponseMessage(userID, authKey), null, null));
 					}catch(IOException e){
 						e.printStackTrace();
 					}
 				}else{
-					//throw new AuthenticationException("Username and password did not match.");
+					// password from the client didn't match the password in the database
 					try{
 						connection.sendMessage(new ServerMessage(ServerMessage.MessageID.AUTHENTICATION_ERROR,null,null,null));
 					}catch(IOException e){
@@ -398,6 +430,7 @@ public class ResidenceManagementServerProtocol{
 					return;
 				}
 			}else{
+				// user wasn't found in the database
 				try{
 					connection.sendMessage(new ServerMessage(ServerMessage.MessageID.AUTHENTICATION_ERROR,null,null,null));
 				}catch(IOException e){
@@ -406,6 +439,7 @@ public class ResidenceManagementServerProtocol{
 				return;
 			}
 		}catch(SQLException e){
+			// there was a problem with the database
 			try{
 				connection.sendMessage(new ServerMessage(ServerMessage.MessageID.ERROR,null,null,null));
 			}catch(IOException e1){
@@ -420,14 +454,14 @@ public class ResidenceManagementServerProtocol{
 		// returns:
 		//   -1	: error with authentication
 		//   0	: not logged in (null userID supplied)
-		//   >0	: return from table
+		//   >0	: return from database table
 		final int ERROR_CODE = -1;
 		final int NOT_LOGGED_IN_CODE = 0;
 		//
 		if(userID == null){
 			return NOT_LOGGED_IN_CODE;
 		}
-		
+		//
 		try{
 			if(validateAuthenticationKey(userID, authKey) == false){
 				return ERROR_CODE;
@@ -436,6 +470,8 @@ public class ResidenceManagementServerProtocol{
 			e.printStackTrace();
 			return ERROR_CODE;
 		}
+		//
+		// at this point, we know the user is logged in
 		//
 		PreparedStatement st;
 		try{
@@ -452,6 +488,7 @@ public class ResidenceManagementServerProtocol{
 			//
 			if(rs.next()){
 				return rs.getInt(1);
+				// this is the permissions from the database table
 			}else{
 				return ERROR_CODE;
 			}
@@ -467,6 +504,7 @@ public class ResidenceManagementServerProtocol{
 			st = dbConnection.prepareStatement("SELECT auth_key FROM user_accounts WHERE user_id = ? LIMIT 1");
 			st.setLong(1, userID.id);
 		}catch(SQLException e){
+			// this should never cause an error, but just in case...
 			throw new AuthenticationException("There shouldn't be an error here.", e);
 		}
 		//
@@ -478,9 +516,11 @@ public class ResidenceManagementServerProtocol{
 				if(new String(authKey).compareTo(rs.getString(1)) == 0){
 					return true;
 				}else{
+					// the authentication keys do not match
 					return false;
 				}
 			}else{
+				// the user id wasn't found in the database
 				return false;
 			}
 		}catch(SQLException e){

@@ -5,8 +5,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Vector;
-
-import lakehead.grouptwo.residence_management_system.data.AuthenticationException;
+//
 import lakehead.grouptwo.residence_management_system.data.gateways.IResidenceDataGateway;
 import lakehead.grouptwo.residence_management_system.data.identifiers.ApplicationID;
 import lakehead.grouptwo.residence_management_system.data.identifiers.BuildingID;
@@ -15,6 +14,9 @@ import lakehead.grouptwo.residence_management_system.data.identifiers.RoomID;
 import lakehead.grouptwo.residence_management_system.data.identifiers.UserID;
 //
 public class ResidenceDataSQL implements IResidenceDataGateway{
+	//
+	// this follows the IResidenceDataGateway interface since it contains all the methods the client will request
+	//
 	private Connection dbConnection;
 	//
 	public ResidenceDataSQL(Connection _dbConnection){
@@ -26,18 +28,18 @@ public class ResidenceDataSQL implements IResidenceDataGateway{
 		Vector<RoomID> rooms = new Vector<RoomID>();
 		//
 		PreparedStatement st;
-		st = dbConnection.prepareStatement(	"SELECT DISTINCT(rooms.room_id)"+
-											"FROM rooms"+
-											"LEFT JOIN user_accounts"+
-											"ON rooms.room_id=user_accounts.residence_room"+
-											"WHERE (user_accounts.residence_room IN ("+
-											"     SELECT user_accounts.residence_room"+
-											"     FROM user_accounts"+
-											"     GROUP BY user_accounts.residence_room"+
-											"     HAVING COUNT(user_accounts.residence_room) < rooms.room_capacity"+
-											")"+
-											"OR user_accounts.residence_room is NULL)"+
-											"AND in_building = ?");
+		st = dbConnection.prepareStatement(	"SELECT DISTINCT(rooms.room_id) "+
+											"FROM rooms "+
+											"LEFT JOIN user_accounts "+
+											"ON rooms.room_id=user_accounts.residence_room "+
+											"WHERE (user_accounts.residence_room IN ( "+
+											"     SELECT user_accounts.residence_room "+
+											"     FROM user_accounts "+
+											"     GROUP BY user_accounts.residence_room "+
+											"     HAVING COUNT(user_accounts.residence_room) < rooms.room_capacity "+
+											") "+
+											"OR user_accounts.residence_room is NULL) "+
+											"AND in_building = ? ");
 		st.setLong(1, buildingID.id);
 		//
 		ResultSet rs = null;
@@ -362,7 +364,7 @@ public class ResidenceDataSQL implements IResidenceDataGateway{
 	@Override
 	public void removeApplication(ApplicationID applicationID) throws Exception{
 		PreparedStatement st;
-		st = dbConnection.prepareStatement("DELETE FROM user_accounts WHERE application_id = ?");
+		st = dbConnection.prepareStatement("DELETE FROM residence_applications WHERE application_id = ?");
 		st.setLong(1, applicationID.id);
 		//
 		st.executeUpdate();
@@ -377,6 +379,67 @@ public class ResidenceDataSQL implements IResidenceDataGateway{
 		rs = st.executeQuery();
 		if(rs.next()){
 			return rs.getLong(1);
+		}else{
+			throw new SQLException();
+		}
+	}
+	//
+	@Override
+	public Vector<BuildingID> getAllBuildings() throws Exception{
+		Vector<BuildingID> buildings = new Vector<BuildingID>();
+		//
+		PreparedStatement st;
+		st = dbConnection.prepareStatement("SELECT building_id FROM buildings");
+		//
+		ResultSet rs = null;
+		rs = st.executeQuery();
+		while(rs.next()) {
+			buildings.add(new BuildingID(rs.getLong(1)));
+		}
+		//
+		return buildings;
+	}
+	//
+	@Override
+	public String getNameOfBuilding(BuildingID buildingID) throws Exception{
+		PreparedStatement st;
+		st = dbConnection.prepareStatement("SELECT building_name FROM buildings WHERE building_id = ? LIMIT 1");
+		st.setLong(1, buildingID.id);
+		//
+		ResultSet rs = null;
+		rs = st.executeQuery();
+		if(rs.next()){
+			return rs.getString(1);
+		}else{
+			throw new SQLException();
+		}
+	}
+	//
+	@Override
+	public int getCapacityOfRoom(RoomID roomID) throws Exception{
+		PreparedStatement st;
+		st = dbConnection.prepareStatement("SELECT room_capacity FROM rooms WHERE room_id = ? LIMIT 1");
+		st.setLong(1, roomID.id);
+		//
+		ResultSet rs = null;
+		rs = st.executeQuery();
+		if(rs.next()){
+			return rs.getInt(1);
+		}else{
+			throw new SQLException();
+		}
+	}
+	//
+	@Override
+	public String getDevicesInRoom(RoomID roomID) throws Exception{
+		PreparedStatement st;
+		st = dbConnection.prepareStatement("SELECT devices FROM rooms WHERE room_id = ? LIMIT 1");
+		st.setLong(1, roomID.id);
+		//
+		ResultSet rs = null;
+		rs = st.executeQuery();
+		if(rs.next()){
+			return rs.getString(1);
 		}else{
 			throw new SQLException();
 		}

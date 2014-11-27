@@ -29,6 +29,7 @@ public class ConnectionListener implements Runnable{
 		try{
 			Socket clientSocket;
 			while(running){
+				// if the timeout is set for the server socket, this loop will every x seconds and will quit if running is false
 				clientSocket = null;
 				try{
 					clientSocket = serverSocket.accept();
@@ -38,6 +39,7 @@ public class ConnectionListener implements Runnable{
 				if(clientSocket != null){
 					clientSocket.setSoTimeout(10*1000);
 					// 10 seconds
+					// this is so that the connection won't hang the thread
 					connectionManager.addConnection(new ConnectionToClient(clientSocket, serverProtocol));
 				}
 			}

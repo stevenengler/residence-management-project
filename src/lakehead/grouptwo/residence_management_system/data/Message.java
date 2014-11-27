@@ -1,11 +1,7 @@
 package lakehead.grouptwo.residence_management_system.data;
 //
-import java.util.Vector;
-
 import lakehead.grouptwo.residence_management_system.data.gateways.IResidenceDataGateway;
 import lakehead.grouptwo.residence_management_system.data.gateways.IUserDataGateway;
-import lakehead.grouptwo.residence_management_system.data.identifiers.BuildingID;
-import lakehead.grouptwo.residence_management_system.data.identifiers.RoomID;
 import lakehead.grouptwo.residence_management_system.data.identifiers.MessageID;
 //
 public class Message{

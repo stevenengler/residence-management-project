@@ -45,12 +45,12 @@ setTitle("Housing Information");
 		contentPane.add(firstYearLabel);
 		try{
 			Building building1 = new Building(new BuildingID(1), residenceDataGateway, userDataGateway);
-			JLabel house1Label = new JLabel("House 1: " + building1.getNumberOfAvailableRooms()+"/"+building1.getNumberOfRooms()+" rooms available");
+			JLabel house1Label = new JLabel(building1.getName() + ": " + building1.getNumberOfAvailableRooms()+"/"+building1.getNumberOfRooms()+" rooms available");
 			house1Label.setBounds(10, 64, 383, 19);
 			contentPane.add(house1Label);
 	
 			Building building2 = new Building(new BuildingID(2), residenceDataGateway, userDataGateway);
-			JLabel house2Label = new JLabel("House 2: " + building2.getNumberOfAvailableRooms()+"/"+building2.getNumberOfRooms()+" rooms available");
+			JLabel house2Label = new JLabel(building2.getName() + ": " + building2.getNumberOfAvailableRooms()+"/"+building2.getNumberOfRooms()+" rooms available");
 			house2Label.setBounds(10, 94, 383, 19);
 			contentPane.add(house2Label);
 			
@@ -60,22 +60,22 @@ setTitle("Housing Information");
 			contentPane.add(restYearLabel);
 	
 			Building building3 = new Building(new BuildingID(3), residenceDataGateway, userDataGateway);
-			JLabel house3Label = new JLabel("House 3: " + building3.getNumberOfAvailableRooms()+"/"+building3.getNumberOfRooms()+" rooms available");
+			JLabel house3Label = new JLabel(building3.getName() + ": " + building3.getNumberOfAvailableRooms()+"/"+building3.getNumberOfRooms()+" rooms available");
 			house3Label.setBounds(10, 173, 383, 19);
 			contentPane.add(house3Label);
 	
 			Building building4 = new Building(new BuildingID(4), residenceDataGateway, userDataGateway);
-			JLabel house4Lable = new JLabel("House 4: " + building4.getNumberOfAvailableRooms()+"/"+building4.getNumberOfRooms()+" rooms available");
+			JLabel house4Lable = new JLabel(building4.getName() + ": " + building4.getNumberOfAvailableRooms()+"/"+building4.getNumberOfRooms()+" rooms available");
 			house4Lable.setBounds(10, 203, 383, 19);
 			contentPane.add(house4Lable);
 	
 			Building building5 = new Building(new BuildingID(5), residenceDataGateway, userDataGateway);
-			JLabel house5Lable = new JLabel("House 5: " + building5.getNumberOfAvailableRooms()+"/"+building5.getNumberOfRooms()+" rooms available");
+			JLabel house5Lable = new JLabel(building5.getName() + ": " + building5.getNumberOfAvailableRooms()+"/"+building5.getNumberOfRooms()+" rooms available");
 			house5Lable.setBounds(10, 233, 383, 19);
 			contentPane.add(house5Lable);
 	
 			Building building6 = new Building(new BuildingID(6), residenceDataGateway, userDataGateway);
-			JLabel house6Lable = new JLabel("House 6: " + building6.getNumberOfAvailableRooms()+"/"+building6.getNumberOfRooms()+" rooms available");
+			JLabel house6Lable = new JLabel(building6.getName() + ": " + building6.getNumberOfAvailableRooms()+"/"+building6.getNumberOfRooms()+" rooms available");
 			house6Lable.setBounds(10, 263, 383, 19);
 			contentPane.add(house6Lable);
 		}catch(Exception e){

@@ -2,7 +2,6 @@ package lakehead.grouptwo.residence_management_system.gui;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.sql.Connection;
 import java.util.Enumeration;
 
 import javax.swing.AbstractButton;
@@ -19,10 +18,8 @@ import javax.swing.JTextField;
 import javax.swing.border.EmptyBorder;
 
 import lakehead.grouptwo.residence_management_system.data.AuthenticationException;
-import lakehead.grouptwo.residence_management_system.data.IAccountData;
 import lakehead.grouptwo.residence_management_system.data.gateways.IResidenceDataGateway;
 import lakehead.grouptwo.residence_management_system.data.gateways.IUserDataGateway;
-import lakehead.grouptwo.residence_management_system.implemented_gateways.client_sql.ClientSQLAccountData;
 import lakehead.grouptwo.residence_management_system.implemented_gateways.server.ConnectionToServer;
 import lakehead.grouptwo.residence_management_system.implemented_gateways.server.ServerAccountData;
 import lakehead.grouptwo.residence_management_system.implemented_gateways.server.ServerResidenceData;

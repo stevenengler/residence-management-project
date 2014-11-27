@@ -2,10 +2,14 @@ package lakehead.grouptwo.residence_management_server;
 
 import java.io.IOException;
 import java.net.BindException;
+import java.net.InetAddress;
+import java.net.NetworkInterface;
 import java.net.ServerSocket;
+import java.net.SocketException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.util.Enumeration;
 import java.util.Scanner;
 
 import lakehead.grouptwo.residence_management_server.networking.ConnectionListener;
@@ -25,6 +29,7 @@ public class ResidenceManagementServer{
 			serverSocket = new ServerSocket(portNumber);
 			serverSocket.setSoTimeout(10*1000);
 			// 10 seconds
+			// the timeout for the server is needed so that the server can quit if dbConnection.close() is called
 		}catch(BindException e){
 			initializationError = true;
 			System.err.println("It looks like there already is a server running on port "+portNumber+".");
@@ -38,9 +43,10 @@ public class ResidenceManagementServer{
 		if(!initializationError){
 			try{
 				Class.forName("org.postgresql.Driver");
+				// the JDBC driver needed for the PostgreSQL database
 			}catch(ClassNotFoundException e){
 				initializationError = true;
-				System.err.println("Could not load Postgre Driver.");
+				System.err.println("Could not load the PostgreSQL Driver.");
 				e.printStackTrace();
 			}
 		}
@@ -49,10 +55,10 @@ public class ResidenceManagementServer{
 		//
 		if(!initializationError){
 			try{
-				dbConnection = DriverManager.getConnection("jdbc:postgresql:ResidenceManagementSystem", "testLogin", "abc");
+				dbConnection = DriverManager.getConnection("jdbc:postgresql:ResidenceManagementSystem", "residence_management_server", "password_a$g3e4rg45y57u");
 			}catch(SQLException e){
 				initializationError = true;
-				System.err.println("Could not connect to database.");
+				System.err.println("Could not connect to the database.");
 				e.printStackTrace();
 			}
 		}
@@ -62,8 +68,33 @@ public class ResidenceManagementServer{
 			ConnectionManager manager = new ConnectionManager();
 			ConnectionListener connectionListener = new ConnectionListener(serverSocket, manager, serverProtocol);
 			//
-			Scanner keyboard = new Scanner(System.in);
+			Enumeration<NetworkInterface> networkInterfaces = null;
+			try{
+				networkInterfaces = NetworkInterface.getNetworkInterfaces();
+			}catch(SocketException e){
+				e.printStackTrace();
+			}
+			//
+			System.out.println("The following are the host addresses from the network interfaces:");
+			//
+			while(networkInterfaces != null && networkInterfaces.hasMoreElements())
+			{
+			    NetworkInterface n = (NetworkInterface) networkInterfaces.nextElement();
+			    Enumeration<InetAddress> ee = n.getInetAddresses();
+			    while (ee.hasMoreElements())
+			    {
+			        InetAddress i = (InetAddress)ee.nextElement();
+			        System.out.println("\tHost address: "+i.getHostAddress());
+			    }
+			}
+			//
+			System.out.println();
+			System.out.println("The port number is: "+portNumber);
+			//
+			System.out.println();
 			System.out.println("Enter the line \"stop\" to close open-connections and stop the server.");
+			//
+			Scanner keyboard = new Scanner(System.in);
 			//
 			boolean checkForInput = true;
 			//
@@ -82,6 +113,9 @@ public class ResidenceManagementServer{
 					System.out.println("Command is not recognized.");
 				}
 			}
+			//
+			keyboard.close();
+			//
 			System.out.println("Stopping (please wait at least 10 seconds)...");
 		}
 	}

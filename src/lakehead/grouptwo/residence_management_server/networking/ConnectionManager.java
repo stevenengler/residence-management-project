@@ -6,6 +6,7 @@ public class ConnectionManager{
 	Vector<ConnectionToClient> connectionsToClients = new Vector<ConnectionToClient>();
 	//
 	public ConnectionManager(){
+		// this class only needs to keep track of the connections
 	}
 	//
 	public void addConnection(ConnectionToClient newConnection){

@@ -18,7 +18,6 @@ import lakehead.grouptwo.residence_management_system.data.IAccountData;
 import lakehead.grouptwo.residence_management_system.data.User;
 import lakehead.grouptwo.residence_management_system.data.gateways.IResidenceDataGateway;
 import lakehead.grouptwo.residence_management_system.data.gateways.IUserDataGateway;
-import lakehead.grouptwo.residence_management_system.implemented_gateways.client_sql.ClientSQLAccountData;
 import lakehead.grouptwo.residence_management_system.implemented_gateways.server.ConnectionToServer;
 import lakehead.grouptwo.residence_management_system.implemented_gateways.server.ServerAccountData;
 import lakehead.grouptwo.residence_management_system.implemented_gateways.server.ServerResidenceData;

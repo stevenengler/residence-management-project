@@ -123,7 +123,7 @@ class ResidentGUI extends VerticallyStackedMenu{
 				try{
 					Vector<MessageID> messages = new User(accountData.getThisUserID(), residenceDataGateway, userDataGateway).getUnreadReceivedMessages();
 					Message message = new Message(messages.get(0), residenceDataGateway, userDataGateway);
-					messageContents = message.getContents();
+					messageContents zzz= message.getContents();
 					message.setReadStatus(true);
 				}catch(Exception e1){
 					messageContents = "Error: Couldn't get message.";

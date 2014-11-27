@@ -16,11 +16,12 @@ import lakehead.grouptwo.residence_management_server.messages.ServerMessage;
 public class ConnectionToClient implements Runnable{
 	Socket thisSocket;
 	ResidenceManagementServerProtocol serverProtocol;
+	// the protocol to handle the messages
+	//
 	ObjectInputStream inStream;
 	ObjectOutputStream outStream;
 	//
 	boolean running = true;
-	
 	//
 	public ConnectionToClient(Socket connectionSocket, ResidenceManagementServerProtocol _serverProtocol){
 		thisSocket = connectionSocket;
@@ -28,8 +29,8 @@ public class ConnectionToClient implements Runnable{
 		//
 		Thread thisThread = new Thread(this);
 		thisThread.start();
+		// run this object as a thread
 	}
-	
 	//
 	@Override
 	public void run(){
@@ -47,6 +48,7 @@ public class ConnectionToClient implements Runnable{
 		//
 		try{
 			while(running){
+				// this should loop every x seconds assuming that the timeout for the socket was set
 				try{
 					ServerMessage receivedMessage = readMessage();
 					serverProtocol.processFromClient(receivedMessage, this);

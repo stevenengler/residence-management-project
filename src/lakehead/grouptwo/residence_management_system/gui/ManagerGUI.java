@@ -1,29 +1,24 @@
 package lakehead.grouptwo.residence_management_system.gui;
-
+//
 import java.awt.Color;
-import java.awt.Component;
-import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.Vector;
-
-import javax.swing.Box;
-import javax.swing.BoxLayout;
+//
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
-import javax.swing.JPanel;
 import javax.swing.UIManager;
-import javax.swing.border.EmptyBorder;
-
+//
 import lakehead.grouptwo.residence_management_system.data.IAccountData;
 import lakehead.grouptwo.residence_management_system.data.Message;
 import lakehead.grouptwo.residence_management_system.data.User;
 import lakehead.grouptwo.residence_management_system.data.gateways.IResidenceDataGateway;
 import lakehead.grouptwo.residence_management_system.data.gateways.IUserDataGateway;
 import lakehead.grouptwo.residence_management_system.data.identifiers.MessageID;
-
+//
 public class ManagerGUI extends VerticallyStackedMenu{
+	//
 	private static final long serialVersionUID = -5363908732688095195L;
 	//
 	private IResidenceDataGateway residenceDataGateway;
@@ -153,7 +148,7 @@ public class ManagerGUI extends VerticallyStackedMenu{
 			
 			public void actionPerformed(ActionEvent e) {
 	                	
-				RoomInfoGUI roomInfoGUI = new RoomInfoGUI();
+				RoomInfoGUI roomInfoGUI = new RoomInfoGUI(residenceDataGateway, userDataGateway, accountData);
 	            roomInfoGUI.setVisible(true);
 	            setVisible(false);
 			}

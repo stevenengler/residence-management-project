@@ -12,6 +12,7 @@ public class ServerMessage implements Serializable{
 								LOGIN_RESPONSE, CLOSE_CONNECTION, OKAY, ERROR,
 								UNEXPECTED_MESSAGE_DATA_TYPE, AUTHENTICATION_ERROR, PERMISSION_ERROR
 							};
+	// these are the main types of messages the client or server can send
 	//
 	private MessageID id;
 	private Object object;

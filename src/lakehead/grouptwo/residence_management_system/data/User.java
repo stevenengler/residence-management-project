@@ -44,6 +44,7 @@ public class User{
 		}
 	}
 	public Vector<Building> getManagedBuildings() throws Exception{
+		// get the BuildingIDs from the gateway and create Building objects from them
 		Vector<BuildingID> ids = residenceData.getBuildingsManagedByUser(id);
 		Vector<Building> buildings = new Vector<Building>();
 		for(int i=0; i<ids.size(); i++){

@@ -4,12 +4,14 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.Vector;
 
 import lakehead.grouptwo.residence_management_system.data.gateways.IUserDataGateway;
 import lakehead.grouptwo.residence_management_system.data.identifiers.UserID;
 //
 public class UserDataSQL implements IUserDataGateway{
+	//
+	// this follows the IUserDataGateway interface since it contains all the methods the client will request
+	//
 	private Connection dbConnection;
 	//
 	public UserDataSQL(Connection _dbConnection){
